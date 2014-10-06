@@ -1,0 +1,9 @@
+#!/bin/bash
+
+WRK_DIR=$( dirname $0 )
+LIB_DIR=lib
+BIN_DIR=bin
+SHE_SCRIPT=she.pl
+
+$PERL -I ${WRK_DIR}/${LIB_DIR} ${WRK_DIR}/${BIN_DIR}/${SHE_SCRIPT} $*
+
