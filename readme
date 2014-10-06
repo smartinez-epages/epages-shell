@@ -1,0 +1,69 @@
+
+The ePages shell, a simple command-line tool to ease the interaction with the epages objects.
+
+This is an experimental tool (Alpha version) which intends to include in one shell all the 
+operations you need to work with epages at low level: manage objects (create, read, update, 
+delete) and more... 
+
+epages already includes a lot of scripts to do almost everything, but it would be nice to 
+have those utilities in one tool. 
+
+INSTALL
+
+    Simply set the execution rights to the launcher script
+    
+        # cd epages-shell
+        # chmod 755 she    
+
+RUN
+
+    Directly run the launcher
+    
+        # cd epages-shell
+        # ./she
+
+    Or you can start she with arguments. Command-line arguments: 
+
+        she [ StoreName ] [ ObjectPath ]
+        
+    You can start she with arguments to connect a store:
+        
+        # she Store
+    
+    and select an object:
+    
+        # she Store /Shops/DemoShop
+
+FIRSTS STEPS
+
+    0. List of available commands and help for a specific one:
+        
+        [she] help
+        [she] ? set
+        
+    1. Connect to a Store or BusinessUnit (database):
+    
+        [she] use Store
+        
+    2. Browse the objects tree
+    
+        [she] cd /Shops/DemoShop
+        [she] cd Users
+        
+    3. Information about the current object
+    
+        [she] status
+        
+    4. List the childs of the current object
+     
+        [she] ls
+        
+    5. List all the attributes of the current object
+    
+        [she] get
+        
+    6. Change the Birth date of a customer
+     
+        [she] cd /Shops/DemoShop/Customers/1000/BillingAddress
+        [she] set Birthday='21/08/1989 09:30:00'
+
