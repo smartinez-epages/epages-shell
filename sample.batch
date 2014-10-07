@@ -1,0 +1,19 @@
+# Sample she batch !!!
+# Yes, comments are allowed ...
+
+# first of all we clean the terminal
+clear
+
+# Some basic stuff in Store
+use Store
+get Alias ObjectID
+cd Shops/DemoShop
+get Alias ObjectID IsClosed
+
+# And now with Site
+use Site
+cd /
+get
+
+# Go home
+quit
