@@ -7,12 +7,12 @@ package Shell::Shell;
 
 use strict ;
 
-use Shell::Console ;
-use Shell::CommandLoader ;
-
-use Getopt::Long qw ( 
-    GetOptionsFromString 
+use Shell::Console qw (
+    NewConsole
 ) ;
+
+use Shell::CommandLoader ;
+use Shell::Arguments ; 
 
 my $BasicCommandsPath = 'Shell/Command' ;
 
@@ -42,20 +42,84 @@ sub new {
     my $hOptions = $_[0] // {} ;
 
     my $hAttributes = {
-        'Options'       => $hOptions,
         'Exit'          => 0,
-        'Title'         => $hOptions->{'Title'} // 'Simple shell v1',
+        'Name'          => 'she',
+        'Title'         => 'Simple shell v1',
         'HelpTxt'       => 'Type \'help\' or \'?\' for help',
-        'Debug'         => $hOptions->{'Debug'} // 0,
-        'Prompt'        => $hOptions->{'Prompt'} // '> ',
-        'Console'       => Shell::Console->new({ 'Pager' => $hOptions->{'Pager'} }) 
+        'Debug'         => 0,
+        'Prompt'        => '> ',
     } ;
     
-    my $self = bless( $hAttributes, $class );
-    
+    my $self = bless( { %$hAttributes, %$hOptions }, $class );
+
+    $self->_parseArguments() ;
+    $self->_initConsole() ;
     $self->_initCommands() ;
     
     return $self ;
+}
+
+#======================================================================================================================
+# §function     _parseArguments
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_parseArguments()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _parseArguments {
+    my $self = shift;
+
+    my $Arguments = Shell::Arguments->new( $self->_getArgumentsMetaData() ) ;
+
+    $Arguments->parseFromArray( $self->{'Arguments'} ) ;
+    
+    $self->{'Arguments'} = $Arguments ;
+    
+    if ( $Arguments->getArguments()->{'Help'} ) {
+        $self->help() ;    
+    }
+    
+    
+    return ;
+}
+
+#======================================================================================================================
+# §function     _getArgumentsMetaData
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $aArguments = $Shell->_getArgumentsMetaData() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArgumens | Arguments specification for the command | hash.ref
+#======================================================================================================================
+sub _getArgumentsMetaData {
+    my $self = shift;
+
+    return {
+        'NoPager'           => [ 'nopager',     0 ],
+        'Prompt'            => [ 'prompt',      0 ],
+        'NoHeader'          => [ 'noheader',    0 ],
+        'Help'              => [ 'help',        0 ],
+        'BatchFileName'     => [ 'batch=s',     undef ],
+    } ;
+}
+
+#======================================================================================================================
+# §function     _initConsole
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_initConsole()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _initConsole {
+    my $self = shift;
+
+    $self->{'Console'} = NewConsole( $self ) ;
+    
+    return ;
 }
 
 #======================================================================================================================
@@ -74,7 +138,7 @@ sub _initCommands {
     
     my $CommandLoader = Shell::CommandLoader->new( $self ) ;
     $self->_loadCommands( $CommandLoader, $aBasicCommandsList ) ;
-    $self->_loadCommands( $CommandLoader, $self->{'Options'}->{'Commands'} ) ;
+    $self->_loadCommands( $CommandLoader, $self->{'Commands'} ) ;
     
     my $aCommandsNames = [] ;
     my $hCommandsHash = {} ;
@@ -143,6 +207,22 @@ sub getConsole {
 }
 
 #======================================================================================================================
+# §function     getArguments
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $aArguments = $Shell->getArguments() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArgumens | Arguments specification for the command | hash.ref
+#======================================================================================================================
+sub getArguments {
+    my $self = shift;
+
+    return $self->{'Arguments'}->getArguments() ;
+}
+
+#======================================================================================================================
 # §function     getAllCommands
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
@@ -206,13 +286,15 @@ sub getCommandNames {
 sub printHeader {
     my $self = shift;
 
-    $self->getConsole()->output(
-        "\n%s\n%s%s\n",
-        $self->{'Title'},
-        $self->getHeaderText(),
-        $self->getHelpText()
-    ) ;
-
+    if ( not $self->getArguments()->{'NoHeader'} ) {
+        $self->getConsole()->output(
+            "\n%s\n%s%s\n",
+            $self->{'Title'},
+            $self->getHeaderText(),
+            $self->getHelpText()
+        ) ;
+    }
+    
     return;
 }
 
@@ -259,46 +341,96 @@ sub getHelpText {
 sub run {
     my $self = shift;
 
+    $self->_begin() ;
+    $self->_run() ;
+    $self->_end() ;
+
+    return;
+}
+
+#======================================================================================================================
+# §function     _begin
+# §state        protected
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_begin()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _begin {
+    my $self = shift;
+
     my $Console = $self->getConsole() ;
-    
+    $Console->open() ;
+        
+    return;
+}
+
+#======================================================================================================================
+# §function     _run
+# §state        protected
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_run()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _run {
+    my $self = shift;
+
+    my $Console = $self->getConsole() ;
     $self->{'Exit'} = 0 ;
     while ( not $self->{'Exit'} ) {
         my $UserInput = $Console->prompt( "%s", $self->{'Prompt'} ) ;
         $UserInput =~ m/^\s*(\S*)\s*(.*)/ ;
         my $CommandName = $1 ;
         my $CommandArgs = $2 ;
-        
-        $Console->resetPager() ;
-        $self->_runCommand( $CommandName, $CommandArgs ) ;
+        $Console->reset() ;
+        $self->executeCommand( $CommandName, $CommandArgs ) ;
     }
-
+        
     return;
 }
 
 #======================================================================================================================
-# §function     _runCommand
+# §function     _end
+# §state        protected
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_end()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _end {
+    my $self = shift;
+
+    my $Console = $self->getConsole() ;
+    $Console->close() ;
+        
+    return;
+}
+
+#======================================================================================================================
+# §function     executeCommand
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->_runCommand( $CommandName, $CommandArgs )
+# §syntax       $Shell->executeCommand( $CommandName, $CommandArgs )
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandName | TODO | string
 # §input        $CommandArgs | TODO | string
 #======================================================================================================================
-sub _runCommand {
+sub executeCommand {
     my $self = shift;
 
     my ( $CommandName, $CommandArgs ) = @_ ;
 
-    if ( length( $CommandName ) ) {
+    if ( length( $CommandName ) 
+         && $CommandName !~ /^\s*#/ ) {
         my $Console = $self->getConsole() ;
         my $CommandKey = lc( $CommandName ) ;
         if ( defined $self->{'CommandsHash'}->{$CommandKey} ) {
             my $Command = $self->{'CommandsHash'}->{$CommandKey} ;
-            my $hArguments = $self->_parseArguments( $Command, $CommandArgs ) ;
             eval {
-                $Command->run( $hArguments ) ;
+                $Command->execute( $CommandArgs ) ;
             };
             if ( $@ ) {
                 $self->error( $@ ) ;
@@ -315,42 +447,6 @@ sub _runCommand {
     
     return;
 }
-
-#======================================================================================================================
-# §function     _parseArguments
-# §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->_parseArguments( $Command, $CommandArgs )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $Command | TODO | string
-# §input        $CommandArgs | TODO | string
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $hArguments | TODO | hash.ref
-#======================================================================================================================
-sub _parseArguments {
-    my $self = shift;
-
-    my ( $Command, $CommandArgs ) = @_ ;
-
-    my $hArguments = { '@' => [] }  ;
-    my @OptsList = ( $CommandArgs ) ;
-    my $CmdOpts = $Command->getArguments() ;
-
-    foreach my $OptName ( keys %$CmdOpts ) {
-        my $OptItem = $CmdOpts->{$OptName} ;
-        $hArguments->{$OptName} = $OptItem->[1] ;
-        push (@OptsList , $OptItem->[0] => \$hArguments->{$OptName} );
-    }
-
-    my ( $ret, $args ) = GetOptionsFromString( @OptsList ) ;
-
-    $hArguments->{'@'} = $args ;
-
-    return $hArguments ;
-}
-
 
 #======================================================================================================================
 # §function     exit
@@ -392,6 +488,51 @@ sub error {
     $self->getConsole()->error( @_ ) ;
 
     return ;
+}
+
+#======================================================================================================================
+# §function     help
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->help()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub help {
+    my $self = shift;
+
+    my $Title = $self->{'Title'} ;
+    my $Name = $self->{'Name'} ;
+        
+    print <<END_USAGE;
+
+$Title
+
+Usage:
+    $Name [ flags ]  [ options ] [ StoreName [ ObjectPath ] ]
+
+Flags (optional):
+    -help           Shows this help
+    -noheader       Don't print the starting help header
+    -nopager        Disable pager
+    -prompt         Enable print prompt in Batch mode 
+    
+Options:
+    -batch          Batch mode: execute specified text file (optional)
+
+Arguments:
+    Storename       Connect to the StoreName (optional)
+    ObjectPath      And select the object by path (optional)
+
+Examples:
+    $Name 
+    $Name Store /Shops/DemoShop
+    $Name -nopager -noheader Site
+    $Name -prompt -batch script.txt
+
+END_USAGE
+
+    exit 2;
 }
 
 1;

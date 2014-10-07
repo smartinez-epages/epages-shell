@@ -1,80 +1,106 @@
 #======================================================================================================================
-# Quit
+# §package      Shell::Consoles::BatchConsole
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
 #======================================================================================================================
-package Shell::Command::Quit ;
-use base Shell::Command ;
+package Shell::Consoles::BatchConsole;
+use base Shell::Console;
 
 use strict ;
 
+use Term::ReadKey;
+
 #======================================================================================================================
-# §function     getName
+# §function     open
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandName = $Command->getName() ;
+# §syntax       $Console->open()
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the name of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | the command name | string
+# §description  TODO
 #======================================================================================================================
-sub getName {
+sub open { 
     my $self = shift;
-
-    return 'quit' ;
+    
+    my $FileHandler = $self->{'BatchFileHandler'} ;
+    if ( not defined $FileHandler ) {
+        my $BatchFileName = $self->{'FileName'} ;
+        if ( open( $FileHandler, '<', $BatchFileName ) ) {
+            $self->{'BatchFileHandler'} = $FileHandler ;
+        } else {
+            die "\nERROR: Could not open batch file '$BatchFileName'\n" ;
+        }
+    }
+    
+    return ; 
 }
 
 #======================================================================================================================
-# §function     getAlias
+# §function     close
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
+# §syntax       $Console->close()
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
+# §description  TODO
 #======================================================================================================================
-sub getAlias {
+sub close { 
     my $self = shift;
 
-    return [ 'exit', 'q' ] ;
+    my $FileHandler = $self->{'BatchFileHandler'} ;
+    if ( defined $FileHandler ) {
+        close( $FileHandler ) ;
+        $self->{'BatchFileHandler'} = undef ;
+    }    
+    return ; 
 }
 
 #======================================================================================================================
-# §function     getDescription
+# §function     prompt
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aDescription = $Command->getDescription() ;
+# §syntax       $Input = $Console->prompt( $Format, ... )
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a list of text lines with the short description for the command.
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §return       $aDescription | Description for the command | array.ref
+# §input        $Format | TODO | string
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Input | TODO | string
 #======================================================================================================================
-sub getDescription {
+sub prompt {
     my $self = shift;
 
-    return [ 'Exits the shell' ] ;
+    my $InputLine = '' ;
+    my $FileHandler = $self->{'BatchFileHandler'} ;
+    if ( defined $FileHandler ) {
+        $InputLine =  <$FileHandler> ;
+        if ( $self->{'Prompt'} ) {
+            my $Format = shift ;
+            printf( $Format, @_ ) ;
+            printf( $InputLine ) ;
+        }
+    }
+    
+    return $InputLine ;
 }
 
 #======================================================================================================================
-# §function     execute
+# §function     output
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->execute( $CommandArgs ) 
+# §syntax       $Console->output( $Format, ... )
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Executes the command with the specified arguments
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | Arguments provided for the command execution | string
+# §input        $Format | TODO | string
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Name | TODO | type
 #======================================================================================================================
-sub execute {
+sub output {
     my $self = shift;
 
-    my ( $CommandArgs ) = @_ ;
+    my $Format = shift ;
+    printf( $Format, @_ ) ;
 
-    my $Shell = $self->{'Shell'} ;
-
-    $Shell->getConsole()->debug( "Execute command QUIT\n" ) ;
-    $Shell->exit( 1 ) ;
-
-    return;
+    return 1 ;
 }
 
 1;

@@ -9,7 +9,7 @@ use strict;
 
 use Test::Shell;
 
-my $shell = Test::Shell->new() ;
+my $shell = Test::Shell->new({ 'Arguments' => \@ARGV }) ;
 
 $shell->printHeader();
 $shell->run() ;

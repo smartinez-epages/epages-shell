@@ -8,6 +8,8 @@ package Shell::Command ;
 
 use strict;
 
+use Shell::Arguments ; 
+
 #======================================================================================================================
 # §function     new
 # §state        public
@@ -27,11 +29,16 @@ sub new {
     my ( $Shell, $Options ) = @_ ;
     
     my $hAttributes = {
-        'Shell'     => $Shell,
-        'Options'   => $Options,
+        'Shell'         => $Shell,
+        'Options'       => $Options,
     };
 
-    return bless( $hAttributes, $Class );
+    my $self = bless( $hAttributes, $Class );
+    
+    $self->{'Arguments'} = Shell::Arguments->new( $self->getArguments() ) ;
+    
+    return $self ; 
+    
 }
 
 #======================================================================================================================
@@ -121,26 +128,46 @@ sub getHelp {
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->run( $hArguments ) 
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArguments | Arguments provided in the shell for this command | hash.ref
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $Arguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
 
     my $Console = $self->{'Shell'}->getConsole() ;
     
-    $Console->debug( "Run Command (Abstract Class!)\n" ) ;
+    $Console->debug( "Execute command (Abstract Class!)\n" ) ;
     $Console->output("Nothing to do !\n") ;
 
     return;
+}
+
+#======================================================================================================================
+# §function     _parseArguments
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_parseArguments( $CommandArgs )
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $CommandArgs | TODO | string
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArguments | TODO | hash.ref
+#======================================================================================================================
+sub _parseArguments {
+    my $self = shift;
+
+    my ( $CommandArgs ) = @_ ;
+
+    return $self->{'Arguments'}->parseFromString( $CommandArgs ) ;
 }
 
 1;

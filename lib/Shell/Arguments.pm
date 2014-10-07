@@ -1,140 +1,149 @@
 #======================================================================================================================
-# Delete
+# Arguments
+#
+#   TODO
+#
 #======================================================================================================================
-package ePages::Command::Delete ;
-use base Shell::Command ;
+package Shell::Arguments ;
 
-use strict ;
+use strict;
 
-use DE_EPAGES::Object::API::Factory qw ( 
-    LoadRootObject 
-    ExistsObject
-    ExistsObjectByPath
-    LoadObject 
-    LoadObjectByPath 
-);
-use DE_EPAGES::WebInterface::API::MessageCenter qw (
-    SynchronizeCache
-);
+use Getopt::Long qw ( 
+    GetOptionsFromArray 
+    GetOptionsFromString 
+) ;
 
 #======================================================================================================================
-# §function     getName
+# §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandName = $Command->getName() ;
+# §syntax       Command->new( $Shell, $Options )
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the name of the command
+# §description  Constructor
 #----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | the command name | string
+# §input        $hArgumentsMetaData |TODO | object
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Object | The new object instance | Object
 #======================================================================================================================
-sub getName {
-     my $self = shift;
+sub new {
+    my $Class = shift;
 
-    return 'delete' ;
+    my ( $hArgumentsMetaData ) = @_ ;
+    
+    my $hAttributes = {
+        'ArgumentsMetaData' => $hArgumentsMetaData ,
+        'Arguments' => {}
+    } ;
+    
+    return bless( $hAttributes, $Class );
 }
 
 #======================================================================================================================
-# §function     getAlias
+# §function     Arguments
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
-#======================================================================================================================
-sub getAlias {
-    my $self = shift;
-
-    return [ 'rm' ] ;
-}
-
-#======================================================================================================================
-# §function     getDescription
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aDescription = $Command->getDescription() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a list of text lines with the short description for the command.
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $aDescription | Description for the command | array.ref
-#======================================================================================================================
-sub getDescription {
-     my $self = shift;
-
-    return [ 'Delete the current object (Dangerous !!!)' ] ;
-}
-
-#======================================================================================================================
-# §function     getHelp
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Help = $Command->getHelp()
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the detailed help of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Help | The detailed command help | string
-#======================================================================================================================
-sub getHelp {
-    my $self = shift;
-
-    my $CmdName = $self->getName() ;
-
-    return <<HELP_TEXT
-Usage: $CmdName
-
-Deletes the current object (dangerous !!!)
-
-HELP_TEXT
-
-}
-
-#======================================================================================================================
-# §function     execute
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->execute( $CommandArgs ) 
+# §syntax       $Arguments->getArguments()
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | Arguments provided for the command execution | string
+# §return       $Arguments | TODO | hash.ref
 #======================================================================================================================
-sub execute {
+sub getArguments {
     my $self = shift;
 
-    my ( $CommandArgs ) = @_ ;
-
-    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
-
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-    
-    $Console->debug( "Execute command DELETE\n" ) ;
-
-    my $Object = $Shell->{'ePages'}->getObject() ;
-
-    if ( defined $Object ) {
-        my $ObjectID = $Object->id ; 
-        if ( $ObjectID != 1 ) {
-            $Console->output( "\nCurrent object is\n  ID    %s\n  PATH  %s\n", $Object->id, $Object->pathString() );
-            my $Response = lc( $Console->prompt( "\nDo you really want to delete it (Y/N)? : " ) ) ;
-    
-            if ( $Response eq 'y' ) {
-                $Console->output( "TRAAAAAN !!!!\n" );
-            } else {
-                $Console->output( "Delete cancelled.\n" );
-            }
-            
-            SynchronizeCache() ;
-        } else {
-            $Console->output( "\nmmmm ... Do you feel ok ? You are trying to delete the System object !!!\nI can't do that !!!\n") ;   
-        }
-    } else {
-        $Console->output( "\nNo object !!!\n" );
-    }
-
-    return;
+    return $self->{'Arguments'} ;
 }
 
+#======================================================================================================================
+# §function     parseFromString
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Arguments->parseFromString( $InputString )
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Arguments | TODO | string
+#======================================================================================================================
+sub parseFromString {
+    my $self = shift;
+
+    my ( $InputString ) = @_ ;
+
+    my $hGetOptionsData = $self->_prepareGetOptionsData()  ;
+    my $hArguments  = $hGetOptionsData->{'Arguments'} ;
+    my $aGetOptList = $hGetOptionsData->{'GetOptList'} ;
+    
+    my ( $ret, $args ) =    GetOptionsFromString( 
+                                $InputString, 
+                                @$aGetOptList 
+                            ) ;
+
+    $hArguments->{'@'} = $args ;
+    $self->{'Arguments'} = $hArguments ;
+     
+    return $hArguments ;
+}
+
+#======================================================================================================================
+# §function     parseFromArray
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Arguments->parseFromArray( $aInputArray )
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Arguments | TODO | string
+#======================================================================================================================
+sub parseFromArray {
+    my $self = shift;
+
+    my ( $aInputArray ) = @_ ;
+
+    my $hGetOptionsData = $self->_prepareGetOptionsData()  ;
+    my $hArguments  = $hGetOptionsData->{'Arguments'} ;
+    my $aGetOptList = $hGetOptionsData->{'GetOptList'} ;
+    
+    GetOptionsFromArray(
+        $aInputArray,
+        @$aGetOptList 
+    ) ;
+
+    $hArguments->{'@'} = $aInputArray ;
+    $self->{'Arguments'} = $hArguments ;
+
+    return $hArguments ;
+}
+
+#======================================================================================================================
+# §function     _prepareGetOptionsData
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Arguments->_prepareGetOptionsData()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Arguments | TODO | string
+#======================================================================================================================
+sub _prepareGetOptionsData {
+    my $self = shift;
+
+    my $hArguments = { '@' => [] }  ;
+    my $GetOptsList = [] ;
+    my $ArgumentsMetaData = $self->{'ArgumentsMetaData'} ;
+
+    foreach my $ArgumentName ( keys %$ArgumentsMetaData ) {
+        my $ArgumentItem = $ArgumentsMetaData->{$ArgumentName} ;
+        $hArguments->{$ArgumentName} = $ArgumentItem->[1] ;
+        push (
+            @$GetOptsList , 
+            $ArgumentItem->[0] => \$hArguments->{$ArgumentName} 
+        );
+    }
+
+    return {
+        'Arguments'     => $hArguments,
+        'GetOptList'    => $GetOptsList
+    }
+}
 
 1;

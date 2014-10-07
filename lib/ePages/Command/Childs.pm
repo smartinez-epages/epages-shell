@@ -115,24 +115,26 @@ HELP_TEXT
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->run( $hArguments ) 
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArguments | Arguments provided in the shell for this command | hash.ref
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $hArguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
+
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
     my $Shell = $self->{'Shell'} ;
     my $Console = $Shell->getConsole() ;
     
-    $Console->debug( "Run Command CHILDS\n" ) ;
+    $Console->debug( "Execute command CHILDS\n" ) ;
 
     my $Object = $Shell->{'ePages'}->getObject() ;
 

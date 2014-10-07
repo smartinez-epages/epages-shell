@@ -40,24 +40,26 @@ sub getDescription {
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->run( $hArguments ) 
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArguments | Arguments provided in the shell for this command | hash.ref
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $hArguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
+
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
     my $Shell = $self->{'Shell'} ;
     my $Console = $Shell->getConsole() ;
     
-    $Console->debug( "Run Command CONFIG\n" ) ;
+    $Console->debug( "Execute command CONFIG\n" ) ;
     $Shell->{'Debug'} = ! $Shell->{'Debug'} ;
     $Console->output( "Debug : %s", ( $Shell->{'Debug'} )? 'on' : 'off' ) ;
 

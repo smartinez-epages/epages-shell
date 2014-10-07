@@ -28,10 +28,14 @@ use ePages::ePages ;
 sub new {
     my $class = shift;
 
-    my $self  = $class->SUPER::new({
-        'Title'             => 'SHE: Shell ePages (Alpha version !!!)',
+    my $hOptions = $_[0] // {} ;
+
+    my $hAttributes  = {
+        'Name'              => 'she',
+        'Title'             => 'SHE: Shell ePages (Beta 2)',
         'Prompt'            => '[she] ',
         'ResetStore'        => 0,
+        'ePages'            => ePages::ePages->new(), 
         'Commands'          => [
             'ePages/Command/Store',
             'ePages/Command/Path',
@@ -41,12 +45,11 @@ sub new {
             'ePages/Command/Set',
             'ePages/Command/Delete',
             'Shell/Command/Test',
-        ]
-    }) ;
+        ],
+    } ;
 
-    $self->{'ePages'} = ePages::ePages->new() ;
 
-    return $self;
+    return $class->SUPER::new( { %$hAttributes, %$hOptions } );
 }
 
 #======================================================================================================================
@@ -98,26 +101,28 @@ HELP_TEXT
 }
 
 #======================================================================================================================
-# §function     run
+# §function     _run
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->run()
+# §syntax       $Shell->_run()
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #======================================================================================================================
-sub run {
+sub _run {
     my $self = shift ;
 
-    if ( defined $ARGV[0] ) {
-        $self->_runCommand( 'use', $ARGV[0] ) ;
+    my $Arguments = $self->getArguments() ;
+    my $StoreName = $Arguments->{'@'}->[0] ; 
+    if ( defined $StoreName ) {
+        $self->executeCommand( 'use', $StoreName ) ;
     }
-    
+        
     do {
         $self->{'ResetStore'} = 0 ;
         if ( defined $self->{'ePages'}->getStore() ) {
-            $self->runStore() ;
+            $self->runOnStore() ;
         } else {
-            $self->SUPER::run() ;
+            $self->SUPER::_run() ;
         }
     } while ( $self->{'ResetStore'} ) ;
 
@@ -125,7 +130,7 @@ sub run {
 }
 
 #======================================================================================================================
-# §function     runStore
+# §function     runOnStore
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       pending
@@ -137,19 +142,21 @@ sub run {
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Name | Description | type
 #======================================================================================================================
-sub runStore {
+sub runOnStore {
     my $self = shift ;
 
     my $Console = $self->getConsole() ;
     my $Store = $self->{'ePages'}->getStore() ;
     $Console->output( "  Connecting to store '$Store' ...\n" ) ;
     eval {
+        my $Arguments = $self->getArguments() ;
+        my $ObjectPath = $Arguments->{'@'}->[1] // '/' ; 
         RunOnStore(
           'Store' => $Store,
           'Sub'   => sub {
             $self->{'ePages'}->connect() ;
-            $self->_runCommand( 'cd', ($ARGV[1])? $ARGV[1] : '/' ) ;
-            $self->SUPER::run() ;
+            $self->executeCommand( 'cd', $ObjectPath ) ;
+            $self->SUPER::_run() ;
           }
         ) ;
     };
@@ -157,7 +164,7 @@ sub runStore {
         $self->error( $@ ) ;
         $Console->output( "\n" ) ;
         $self->{'ePages'}->reset() ;
-        $self->SUPER::run() ;
+        $self->SUPER::_run() ;
     }
 
     return;

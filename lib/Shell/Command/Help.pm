@@ -58,21 +58,23 @@ sub getDescription {
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->run( $hArguments ) 
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArguments | Arguments provided in the shell for this command | hash.ref
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $hArguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
 
-    $self->{'Shell'}->getConsole()->debug( "Run Command HELP\n" ) ;
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
+
+    $self->{'Shell'}->getConsole()->debug( "Execute command HELP\n" ) ;
 
     my $Args = $hArguments->{'@'} ;
     if ( scalar @$Args ) {

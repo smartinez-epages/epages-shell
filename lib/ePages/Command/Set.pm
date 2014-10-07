@@ -122,27 +122,26 @@ HELP_TEXT
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       pending
-# §example      pending
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  pending
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $Name | Description | type
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | Description | type
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $hArguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
+
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
     my $Shell = $self->{'Shell'} ;
     my $Console = $Shell->getConsole() ;
     
-    $Console->debug( "Run Command SET\n" ) ;
+    $Console->debug( "Execute command SET\n" ) ;
 
     my $Object = $Shell->{'ePages'}->getObject() ;
 

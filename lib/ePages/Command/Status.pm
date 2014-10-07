@@ -85,21 +85,21 @@ HELP_TEXT
 }
 
 #======================================================================================================================
-# §function     run
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->run( $hArguments ) 
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Executes the command with the specified arguments
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArguments | Arguments provided in the shell for this command | hash.ref
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub run {
+sub execute {
     my $self = shift;
 
-    my ( $hArguments) = @_ ;
+    my ( $CommandArgs ) = @_ ;
 
-    $self->{'Shell'}->getConsole()->debug( "Run Command STATUS\n" ) ;
+    $self->{'Shell'}->getConsole()->debug( "Execute command STATUS\n" ) ;
 
     $self->_showStoreStatus() ;
     $self->_showObjectStatus() ;

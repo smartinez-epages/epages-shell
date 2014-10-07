@@ -1,9 +1,10 @@
 
-The ePages shell, a simple command-line tool to ease the interaction with the epages objects.
+ePages shell, Beta 2
 
-This is an experimental tool (Alpha version) which intends to include in one shell all the 
-operations you need to work with epages at low level: manage objects (create, read, update, 
-delete) and more... 
+Simple command-line tool to work with the epages objects.
+
+This experimental tool aims to include in one shell all the operations you need to work with 
+epages at low level: manage objects (create, read, update, delete) and more... 
 
 epages already includes a lot of scripts to do almost everything, but it would be nice to 
 have those utilities in one tool. 
@@ -15,25 +16,55 @@ INSTALL
         # cd epages-shell
         # chmod 755 she    
 
+USAGE
+
+    she [ flags ]  [ options ] [ StoreName [ ObjectPath ] ]
+
+    Flags (optional):
+        -help           Shows this help
+        -noheader       Don't print the starting help header
+        -nopager        Disable pager
+        -prompt         Enable print prompt in Batch mode 
+        
+    Options:
+        -batch          Batch mode: execute specified text file (optional)
+
+    Arguments:
+        Storename       Connect to the StoreName (optional)
+        ObjectPath      And select the object by path (optional)
+
+    Examples:
+        she 
+        she Store /Shops/DemoShop
+        she -nopager -noheader Site
+        she -prompt -batch script.txt
+
 RUN
 
-    Directly run the launcher
+    Try 
     
-        # cd epages-shell
-        # ./she
-
-    Or you can start she with arguments. Command-line arguments: 
-
-        she [ StoreName ] [ ObjectPath ]
+        # she --help
         
-    You can start she with arguments to connect a store:
+    for command-line options  
+    
+    Simple execution
+    
+        # she
+
+    Or you can start she with arguments to connect a store:
         
         # she Store
     
-    and select an object:
-    
         # she Store /Shops/DemoShop
 
+BATCH MODE
+
+  You can run she with a batch file, no user interaction !
+  
+  Try the sample batch file:
+  
+    # she sample.batch
+    
 FIRSTS STEPS
 
     0. List of available commands and help for a specific one:
@@ -66,4 +97,8 @@ FIRSTS STEPS
      
         [she] cd /Shops/DemoShop/Customers/1000/BillingAddress
         [she] set Birthday='21/08/1989 09:30:00'
+
+TO DO
+
+  Uf !!! Lots of things ...
 

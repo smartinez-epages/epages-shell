@@ -14,7 +14,7 @@ use DE_EPAGES::Core::API::Script qw (
 ) ;
 
 sub Main {
-    my $shell = ePages::Shell->new() ;
+    my $shell = ePages::Shell->new({ 'Arguments' => \@ARGV }) ;
     $shell->printHeader();
     $shell->run() ;
 
