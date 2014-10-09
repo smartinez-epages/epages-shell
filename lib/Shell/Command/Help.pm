@@ -72,16 +72,17 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
+    my $Console = $self->{'Shell'}->getConsole() ;
+    $Console->debug( "Execute command HELP\n" ) ;
+    
     my $hArguments = $self->_parseArguments( $CommandArgs ) ;
-
-    $self->{'Shell'}->getConsole()->debug( "Execute command HELP\n" ) ;
-
     my $Args = $hArguments->{'@'} ;
     if ( scalar @$Args ) {
         $self->_showCommandHelp( $Args->[0] ) ;
     } else {
         $self->_showHelp() ;
     }
+    $Console->output( "\n" ) ;
 
     return;
 }

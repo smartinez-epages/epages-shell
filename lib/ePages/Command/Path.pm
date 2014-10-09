@@ -128,7 +128,7 @@ sub execute {
     $Console->debug( "Execute command PATH\n" ) ;
 
     if ( not $ePages->isStoreActive() ) {
-        $Console->output( "\n  Sorry. No Store selected !!!\n" ) ;
+        $Console->output( "\n  Sorry. No Store selected !!!\n\n" ) ;
         return ;
     }
     
@@ -317,14 +317,14 @@ sub _setTargetObject() {
     my $TargetObject = $PathInfo->{'TargetObject'} ;
     if ( defined $TargetObject ) {
         $ePages->setObject( $TargetObject ) ;
-        $Console->output(
-            "\n  You are now in:\n\n\tStore        %s\n\tObjectID     %s\n\tObjectPath   %s\n",
+        $Console->info(
+            "\n  You are now in:\n\n\tStore        %s\n\tObjectID     %s\n\tObjectPath   %s\n\n",
             $ePages->getStore(),
             $TargetObject->id,
             $TargetObject->get('Path')
         ) ;
     } else {
-        $Console->output( "\n  %s !!!\n", $PathInfo->{'ErrorMessage'} );
+        $Console->info( "\n  %s !!!\n\n", $PathInfo->{'ErrorMessage'} );
     }
         
     return ;

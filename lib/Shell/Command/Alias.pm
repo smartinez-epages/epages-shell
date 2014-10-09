@@ -76,11 +76,12 @@ sub execute {
     
     $Console->debug( "Execute command ALIAS\n" ) ;
 
-    $Console->output( "\nAvailable commands and their alias:\n\n" ) ;
+    $Console->output( "\nAvailable commands and their alias ( - means no alias ) :\n\n" ) ;
     my $CmdNames = $Shell->getCommandNames() ;
     foreach my $CommandName ( @$CmdNames ) {
         $self->_showComandAlias( $Shell->getCommand( $CommandName ) ) ;
     }
+    $Console->output( "\n" ) ;
 
     return;
 }
@@ -101,15 +102,16 @@ sub _showComandAlias {
     my $Console = $self->{'Shell'}->getConsole() ;
     
     my $Aliases = $Command->getAlias() ;
-    if ( scalar @$Aliases ) {
-        $Console->output( "  - %-20s", $Command->getName() ) ;
-        my $Separator = '' ;
-        foreach my $Alias ( @$Aliases ) {
-            $Console->output( "%s%s", $Separator, $Alias) ;
-            $Separator = ', ' ;
-        }
-        $Console->output( "\n" ) ;
+    if ( ( scalar @$Aliases ) == 0 ) {
+        $Aliases = [ '-'] ;
     }
+    $Console->output( "  - %-20s", $Command->getName() ) ;
+    my $Separator = '' ;
+    foreach my $Alias ( @$Aliases ) {
+        $Console->output( "%s%s", $Separator, $Alias) ;
+        $Separator = ', ' ;
+    }
+    $Console->output( "\n" ) ;
 
     return;
 }

@@ -116,18 +116,18 @@ sub execute {
     if ( defined $Object ) {
         my $ObjectID = $Object->id ; 
         if ( $ObjectID != 1 ) {
-            $Console->output( "\nCurrent object is\n  ID    %s\n  PATH  %s\n", $Object->id, $Object->pathString() );
+            $Console->info( "\nCurrent object is\n  ID    %s\n  PATH  %s\n", $Object->id, $Object->pathString() );
             my $Response = lc( $Console->prompt( "\nDo you really want to delete it (Y/N)? : " ) ) ;
-    
             if ( $Response eq 'y' ) {
-                $Console->output( "TRAAAAAN !!!!\n" );
+                $Console->output( "Real delete NOT implemented yet.\n" );
             } else {
                 $Console->output( "Delete cancelled.\n" );
             }
-            
             SynchronizeCache() ;
         } else {
-            $Console->output( "\nmmmm ... Do you feel ok ? You are trying to delete the System object !!!\nI can't do that !!!\n") ;   
+            $Console->output( 
+                "\nmmmm ... Do you feel ok ? You are trying to delete the System object !!!\nI can't do that !!!\n\n"
+            ) ;   
         }
     } else {
         $Console->output( "\nNo object !!!\n" );

@@ -1,0 +1,27 @@
+clear
+
+quiet on
+
+echo
+echo Select BU Store
+use Store
+
+echo
+echo Change to Shops/DemoShop
+cd Shops/DemoShop
+
+echo
+echo Delete with 'Y'
+delete
+Y
+
+echo
+echo Delete with 'N'
+delete
+N
+
+echo
+echo Pause 3 second ...
+pause 3
+
+

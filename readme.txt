@@ -18,7 +18,8 @@ INSTALL
 
 USAGE
 
-    she [ flags ]  [ options ] [ StoreName [ ObjectPath ] ]
+    she [ flags ] [ options ] [ StoreName [ ObjectPath ] ]
+    she [ -prompt ] -batch BatchFile
 
     Flags (optional):
         -help           Shows this help

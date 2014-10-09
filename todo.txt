@@ -1,0 +1,29 @@
+
+TODO : ePages shell
+
+  PRIORITY
+    [ ] Improve _run() in ePages Shell (store change)
+    [ ] Finish command: delete (now is a dummy version !!!)
+    [ ] Finish commands: set & get ( Data Types !!! )
+    [ ] Improve command: config (now simply change the debug flag !!!)
+    
+  IMPROVEMENTS
+    [ ] Refactoring > introduce some DessignPatterns to avoid coupling, DRY, ...
+    [ ] Review headers (comments)
+    [ ] Review commands help
+    [ ] Introduce configuration file.
+    [ ] new command: create (objects creation)
+    [ ] new commans: call >> Object->method( args... )
+    [ ] Documentation
+    
+  DONE
+    [x] Sorted list of commands for the 'alias' and 'help'
+    [x] Header message
+    [x] Error handling for commands execution
+    [x] Command line arguments
+    [x] Issue with Pager: We need to control the new lines (\n) and length !!!
+    [x] New command: echo ( useful for batch execution )
+    [x] New command: pause ( useful for batch execution )
+    [x] New command: quiet ( useful for batch execution )
+    [x] Improve batch execution ( What happens when a command has a prompt ? )
+

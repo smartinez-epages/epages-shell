@@ -186,9 +186,9 @@ sub _showObjectStatus {
         $Console->output("  %-20s%s\n", 'Object:', $Object->alias ) ;
         $Console->output("  %-20s%s\n", 'ObjectID:', $Object->id ) ;
         $Console->output("  %-20s%s\n", 'Path:', $Object->get('Path') ) ;
-        $Console->output("  %-20s%s\n", 'Class:', $Object->get('Class')->alias ) ;
+        $Console->output("  %-20s%s\n\n", 'Class:', $Object->get('Class')->alias ) ;
     } else {
-        $Console->output("  %-20s%s\n", 'Object', 'none' ) ;
+        $Console->output("  %-20s%s\n\n", 'Object', 'none' ) ;
     }
 
     return;

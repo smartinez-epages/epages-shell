@@ -1,8 +1,7 @@
 #======================================================================================================================
-# Config
+# Quiet
 #======================================================================================================================
-package Shell::Command::Config ;
-
+package Shell::Command::Quiet ;
 use base Shell::Command ;
 
 use strict ;
@@ -20,7 +19,7 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'config' ;
+    return 'quiet' ;
 }
 
 #======================================================================================================================
@@ -36,7 +35,7 @@ sub getName {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Set/Get the shell configuration properties' ] ;
+    return [ 'Enable/Disable the commands output' ] ;
 }
 
 #======================================================================================================================
@@ -45,7 +44,7 @@ sub getDescription {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
@@ -54,15 +53,26 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
+    my $Console = $self->{'Shell'}->getConsole() ;
+    
+    $Console->debug( "Execute command QUIET\n" ) ;
+
     my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-    
-    $Console->debug( "Execute command CONFIG\n" ) ;
-    $Shell->{'Debug'} = ! $Shell->{'Debug'} ;
-    $Console->output( "Debug : %s\n", ( $Shell->{'Debug'} )? 'on' : 'off' ) ;
+    my $Quiet = lc ( $hArguments->{'@'}->[0] ) ;
 
+    my $Verbosity = $Console->getVerbosity() ;
+    
+    if ( $Quiet eq 'on' )  {
+        $Verbosity = 0 ;
+    } elsif ( $Quiet eq 'off' )  {
+        $Verbosity = 1 ;
+    } 
+    
+    $Console->output( "Quite mode is %s\n", ( ( $Verbosity )? 'OFF' : 'ON' ) ) ;
+
+    $Console->setVerbosity( $Verbosity ) ;
+    
     return;
 }
 

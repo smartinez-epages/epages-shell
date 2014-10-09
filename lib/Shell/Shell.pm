@@ -20,6 +20,9 @@ my $aBasicCommandsList = [
     "$BasicCommandsPath/Alias",
     "$BasicCommandsPath/Clear",
     "$BasicCommandsPath/Config",
+    "$BasicCommandsPath/Echo",
+    "$BasicCommandsPath/Pause",
+    "$BasicCommandsPath/Quiet",
     "$BasicCommandsPath/Quit",
     "$BasicCommandsPath/Help"
 ] ;
@@ -45,7 +48,7 @@ sub new {
         'Exit'          => 0,
         'Name'          => 'she',
         'Title'         => 'Simple shell v1',
-        'HelpTxt'       => 'Type \'help\' or \'?\' for help',
+        'HelpTxt'       => "Type 'help' or '?' for help\n",
         'Debug'         => 0,
         'Prompt'        => '> ',
     } ;
@@ -287,7 +290,9 @@ sub printHeader {
     my $self = shift;
 
     if ( not $self->getArguments()->{'NoHeader'} ) {
-        $self->getConsole()->output(
+        my $Console = $self->getConsole() ;
+        $Console->reset() ;
+        $Console->output(
             "\n%s\n%s%s\n",
             $self->{'Title'},
             $self->getHeaderText(),
@@ -442,7 +447,6 @@ sub executeCommand {
                 $self->{'HelpTxt'}
             ) ;
         }
-        $Console->output( "\n" ) ;
     }
     
     return;
@@ -464,7 +468,7 @@ sub exit {
     my ( $ShowByeText ) = @_ ;
     
     if ( $ShowByeText ) {
-        $self->getConsole()->output( "Exit shell. Bye !\n\n" ) ;
+        $self->getConsole()->output( "\nExit shell. Bye !\n\n" ) ;
     }
 
     $self->{'Exit'} = 1 ;

@@ -10,6 +10,10 @@ use strict ;
 
 use Term::ReadKey;
 
+use Data::Dumper;
+
+$Data::Dumper::Indent = 1 ;
+
 #======================================================================================================================
 # §function     new
 # §state        public
@@ -36,7 +40,6 @@ sub new {
         'PagerCount'    => 0
     } ;
     
-    
     return $class->SUPER::new( { %$hAttributes, %$hOptions }, $class );
 }
 
@@ -54,7 +57,7 @@ sub reset() {
     $self->{'PagerCmd'} = $self->{'Pager'} ;
     if ( $self->{'PagerCmd'} ) {
         $self->{'PagerCount'} =  0 ;
-        $self->{'PagerMax'} =  (GetTerminalSize())[1] - 3 ;
+        $self->{'PagerMax'} =  (GetTerminalSize())[1] - 2 ;
     }
 
     return ;
@@ -76,7 +79,7 @@ sub prompt {
     my $self = shift;
 
     my $Format = shift ;
-    $self->output( $Format, @_ ) ;
+    printf( $Format, @_ ) ;
     my $Input = ReadLine(0) ;
     $Input =~ s/^\s+|\s+$//g ;
     
@@ -99,9 +102,50 @@ sub output {
     my $self = shift;
 
     my $Format = shift ;
-    printf( $Format, @_ ) ;
+    my $Text = sprintf( $Format, @_ ) ;
+    if ( $self->{'PagerCmd'} ) {
+        return $self->_printWithPager( $Text ) ;
+    } else {
+        print( $Text ) ;
+    }
+    
+    return 1 ;
+}
 
-    return $self->_checkPager() ;
+#======================================================================================================================
+# §function     _printWithPager
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Console->_printWithPager()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Continue | TODO | boolean
+#======================================================================================================================
+sub _printWithPager {
+    my $self = shift;
+
+    my ( $Text ) = @_ ;
+
+    my $TerminalColumns = (GetTerminalSize())[0] ;
+    my @TextLines = split( /^/m, $Text ) ; 
+
+    foreach my $Line ( @TextLines ) {
+        my $LineLength = length( $Line ) ;
+        for( my $Offset = 0 ; $Offset < $LineLength ; $Offset += $TerminalColumns ) {
+            if ( $Offset > 0 ) {
+                print( "\n" ) ;
+            }
+            if ( $Line =~ /\n$/ ) {
+                if ( not $self->_checkPager() ) {
+                    return 0 ;
+                }
+            }
+            print( substr( $Line, $Offset, $TerminalColumns ) ) ;
+        }
+    }
+    
+    return 1 ;
 }
 
 #======================================================================================================================
@@ -114,21 +158,19 @@ sub output {
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Continue | TODO | boolean
 #======================================================================================================================
-sub _checkPager() {
+sub _checkPager {
     my $self = shift;
 
-    if ( $self->{'PagerCmd'} ) {
-        if ( ++$self->{'PagerCount'} >= $self->{'PagerMax'} ) {
-            $self->{'PagerCount'} = 0 ;
-            my $KeyPressed = $self->_pauseOutput() ;
-            if ( $KeyPressed == 27 ) {
-                return 0 ;
-            } elsif ( $KeyPressed == 10 ) {
-                $self->{'PagerCmd'} = 0 ;
-            }
-            
-        } 
-    };
+    $self->{'PagerCount'} ++ ;
+    if ( $self->{'PagerCount'} >= $self->{'PagerMax'} ) {
+        $self->{'PagerCount'} = 0 ;
+        my $KeyPressed = $self->_pauseOutput() ;
+        if ( $KeyPressed == 27 ) {
+            return 0 ;
+        } elsif ( $KeyPressed == 10 ) {
+            $self->{'PagerCmd'} = 0 ;
+        }
+    } 
 
     return 1 ;
 }

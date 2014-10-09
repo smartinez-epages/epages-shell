@@ -1,0 +1,14 @@
+
+CHANGELOG : ePages shell
+
+dd/mm/yyyy  Author
+
+    *   Change 1
+    
+    *   Change 2
+    
+dd/mm/yyyy  Author
+
+    *   Change 1
+    
+    *   Change 2

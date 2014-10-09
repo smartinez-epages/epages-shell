@@ -72,12 +72,16 @@ sub prompt {
     my $FileHandler = $self->{'BatchFileHandler'} ;
     if ( defined $FileHandler ) {
         $InputLine =  <$FileHandler> ;
+        if ( not defined $InputLine ) {
+            return 'exit' ;
+        }
         if ( $self->{'Prompt'} ) {
             my $Format = shift ;
             printf( $Format, @_ ) ;
             printf( $InputLine ) ;
         }
     }
+    $InputLine =~ s/[\r\n]//g ;
     
     return $InputLine ;
 }

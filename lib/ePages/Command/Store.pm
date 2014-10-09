@@ -39,6 +39,24 @@ sub getAlias {
 }
 
 #======================================================================================================================
+# §function     getArguments
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $aArguments = $Command->getArguments() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArgumens | Arguments specification for the command | hash.ref
+#======================================================================================================================
+sub getArguments {
+    my $self = shift;
+
+    return {
+        'quiet'       => [ 'q', 0 ],
+    } ;
+}
+
+#======================================================================================================================
 # §function     getDescription
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
@@ -73,8 +91,11 @@ sub getHelp {
 Description:
     Open a session in the specified epages Store (database)
 
+Flags:
+    -q              Quiet mode
+    
 Usage: 
-    $CmdName [ StoreName ]
+    $CmdName [ Flags ] [ StoreName ]
 
 Arguments:
     StoreName       A valid Store name to connect with
@@ -109,7 +130,6 @@ sub execute {
     my $Console = $Shell->getConsole() ;
     
     $Console->debug( "Execute command STORE\n" ) ;
-
     my $aArgs = $hArguments->{'@'} ;
     my $CountArgs = scalar @$aArgs ;
     if ( $CountArgs == 0 ) {

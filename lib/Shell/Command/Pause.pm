@@ -1,8 +1,7 @@
 #======================================================================================================================
-# Config
+# Pause
 #======================================================================================================================
-package Shell::Command::Config ;
-
+package Shell::Command::Pause ;
 use base Shell::Command ;
 
 use strict ;
@@ -20,7 +19,7 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'config' ;
+    return 'pause' ;
 }
 
 #======================================================================================================================
@@ -36,7 +35,7 @@ sub getName {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Set/Get the shell configuration properties' ] ;
+    return [ 'sleeps for the specified seconds' ] ;
 }
 
 #======================================================================================================================
@@ -45,7 +44,7 @@ sub getDescription {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
@@ -54,15 +53,15 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
+    $self->{'Shell'}->getConsole()->debug( "Execute command SLEEP\n" ) ;
+
     my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
+    my $Args = $hArguments->{'@'} ;
+    if ( defined $Args->[0] ) {
+        sleep( $Args->[0] ) ;
+    }
     
-    $Console->debug( "Execute command CONFIG\n" ) ;
-    $Shell->{'Debug'} = ! $Shell->{'Debug'} ;
-    $Console->output( "Debug : %s\n", ( $Shell->{'Debug'} )? 'on' : 'off' ) ;
-
     return;
 }
 

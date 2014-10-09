@@ -147,7 +147,7 @@ sub runOnStore {
 
     my $Console = $self->getConsole() ;
     my $Store = $self->{'ePages'}->getStore() ;
-    $Console->output( "  Connecting to store '$Store' ...\n" ) ;
+    $Console->info( "  Connecting to store '$Store' ...\n" ) ;
     eval {
         my $Arguments = $self->getArguments() ;
         my $ObjectPath = $Arguments->{'@'}->[1] // '/' ; 

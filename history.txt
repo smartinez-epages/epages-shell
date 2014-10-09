@@ -1,0 +1,18 @@
+
+HISTORY : ePages shell
+
+Release a.b
+
+    Feature 1
+    
+    Fixed 1
+    
+    Fixed 2
+    
+Release a.b
+
+    Feature 1
+    
+    Fixed 1
+    
+    Fixed 2
