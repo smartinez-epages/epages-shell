@@ -1,45 +1,10 @@
 #======================================================================================================================
-# Command
-#
-#   Abstract class for any command we want to run in the Shell
-#
+# Config
 #======================================================================================================================
-package Shell::Command ;
+package Shell::BasicCommand::Config;
+use base Shell::Command::Command;
 
 use strict;
-
-use Shell::Arguments ; 
-
-#======================================================================================================================
-# §function     new
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       Command->new( $Shell, $Options )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Constructor
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $Shell | The shell which creates and executes this command | object
-# §input        $Options | Optionally a command could be build with some specific arguments | unknown
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Object | The new object instance | Object
-#======================================================================================================================
-sub new {
-    my $Class = shift;
-
-    my ( $Shell, $Options ) = @_ ;
-    
-    my $hAttributes = {
-        'Shell'         => $Shell,
-        'Options'       => $Options,
-    };
-
-    my $self = bless( $hAttributes, $Class );
-    
-    $self->{'Arguments'} = Shell::Arguments->new( $self->getArguments() ) ;
-    
-    return $self ; 
-    
-}
 
 #======================================================================================================================
 # §function     getName
@@ -54,39 +19,7 @@ sub new {
 sub getName {
     my $self = shift;
 
-    return 'cmd' ;
-}
-
-#======================================================================================================================
-# §function     getAlias
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
-#======================================================================================================================
-sub getAlias {
-    my $self = shift;
-
-    return [] ;
-}
-
-#======================================================================================================================
-# §function     getArguments
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aArguments = $Command->getArguments() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $hArgumens | Arguments specification for the command | hash.ref
-#======================================================================================================================
-sub getArguments {
-    my $self = shift;
-
-    return {} ;
+    return 'config' ;
 }
 
 #======================================================================================================================
@@ -102,7 +35,7 @@ sub getArguments {
 sub getDescription {
     my $self = shift;
 
-    return [ 'This is the abstract command class' ] ;
+    return [ 'Set/Get the shell configuration properties' ] ;
 }
 
 #======================================================================================================================
@@ -118,13 +51,51 @@ sub getDescription {
 sub getHelp {
     my $self = shift;
 
-    my $Help = "Description:\n" ;
-    my $Description = $self->getDescription() ;
-    foreach my $HelpLine ( @$Description ) {
-        $Help .= "     $HelpLine\n" ;
-    }
+    my $CmdName = $self->getName() ;
 
-    return $Help ;
+    return <<HELP_TEXT
+Usage:
+    $CmdName -i
+    $CmdName [ PropertyName [ NewPropertyValue ]]
+
+Description:
+    Lists the configuration properties (without arguments)
+    Shows a property value (one argument) 
+    Change a property value (two arguments)
+
+Options:
+    -i                      List configuration properties information
+    
+Arguments:
+    PropertyName            Name of an existing configuration property
+    NewPropertyValue        New value for the property
+    
+Examples:
+       $CmdName
+       $CmdName prompt
+       $CmdName verbose 1
+       $CmdName prompt '# '
+
+HELP_TEXT
+
+}
+
+#======================================================================================================================
+# §function     getArguments
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $aArguments = $Command->getArguments() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArgumens | Arguments specification for the command | hash.ref
+#======================================================================================================================
+sub getArguments {
+    my $self = shift;
+
+    return {
+        'info'  => [ 'i', 0 ],
+    } ;
 }
 
 #======================================================================================================================
@@ -133,41 +104,100 @@ sub getHelp {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Executes the command with the specified arguments
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
 sub execute {
     my $self = shift;
+    my ($CommandArgs) = @_;
 
-    my ( $CommandArgs ) = @_ ;
+    my $Shell = $self->{'Shell'};
+    $Shell->getConsole()->debug( "Execute command CONFIG\n" );
 
-    my $Console = $self->{'Shell'}->getConsole() ;
-    
-    $Console->debug( "Execute command (Abstract Class!)\n" ) ;
-    $Console->output("Nothing to do !\n") ;
+    my $hArguments = $self->_parseArguments($CommandArgs);
+    if ($hArguments->{'info'}) {
+        $self->_listConfigPropertiesInfo();
+    } else {
+        my $Args = $hArguments->{'@'} ;
+        my $numArgs = scalar @$Args;
+        if ($numArgs == 0) {
+            $self->_listConfigProperties();
+        } elsif ($numArgs == 1) {
+            $self->_doConfigProperty($Args->[0]);
+        } elsif ($numArgs == 2) {
+            $self->_doConfigProperty($Args->[0], $Args->[1]);
+        } else {
+            $Shell->getConsole()->error( "Wrong number of arguments%n" );
+        }
+    }
 
     return;
 }
 
 #======================================================================================================================
-# §function     _parseArguments
+# §function     _listConfigPropertiesInfo
 # §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->_parseArguments( $CommandArgs )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | TODO | string
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $hArguments | TODO | hash.ref
 #======================================================================================================================
-sub _parseArguments {
+sub _listConfigPropertiesInfo {
     my $self = shift;
 
-    my ( $CommandArgs ) = @_ ;
+    my $Shell = $self->{'Shell'};
+    my $Console = $Shell->getConsole();
+    my $hConfigProperties = $Shell->getConfiguration()->getProperties();
+    foreach my $PropertyName (sort(keys(%$hConfigProperties))) {
+        my $Property = $hConfigProperties->{$PropertyName};
+        $Console->output("  %-20s : %s\n", $PropertyName, $Property->getDescription());
+    }
+    return;
+}
 
-    return $self->{'Arguments'}->parseFromString( $CommandArgs ) ;
+#======================================================================================================================
+# §function     _listConfigProperties
+# §state        private
+#======================================================================================================================
+sub _listConfigProperties {
+    my $self = shift;
+
+    my $Shell = $self->{'Shell'};
+    my $Console = $Shell->getConsole();
+    $Console->output("\n");
+    my $hConfigProperties = $Shell->getConfiguration()->getProperties();
+    foreach my $PropertyName (sort(keys(%$hConfigProperties))) {
+        my $Property = $hConfigProperties->{$PropertyName};
+        $Console->output("  %-20s : %s\n", $PropertyName, $Property->getValue());
+    }
+    $Console->output("\n");
+
+    return;
+}
+
+#======================================================================================================================
+# §function     _doConfigProperty
+# §state        private
+#======================================================================================================================
+sub _doConfigProperty {
+    my $self = shift;
+    my ($PropertyName, $PropertyValue) = @_;
+    
+    my $Shell = $self->{'Shell'};
+    my $Console = $Shell->getConsole();
+    my $Property = $Shell->getConfiguration()->getProperty($PropertyName);
+    if (defined $Property) {
+        if (defined $PropertyValue) {
+            eval {
+                $Property->setValue($PropertyValue);
+            };
+            if ($@) {
+                $Console->error($@->shortMessage());
+            }
+        }
+        $Console->output("\n  %s : %s\n\n", $PropertyName, $Property->getValue());
+    } else {
+        $Console->error("Configuration attribute '$PropertyName' doesn't exist%n");
+    }
+
+    return;
 }
 
 1;

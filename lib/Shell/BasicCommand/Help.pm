@@ -1,15 +1,10 @@
 #======================================================================================================================
-# Status
+# Help
 #======================================================================================================================
-package ePages::Command::Status ;
+package Shell::BasicCommand::Help;
 use base Shell::Command::Command;
 
-use strict ;
-
-use DE_EPAGES::Object::API::Factory qw ( 
-    LoadObject 
-);
-
+use strict;
 
 #======================================================================================================================
 # §function     getName
@@ -24,7 +19,7 @@ use DE_EPAGES::Object::API::Factory qw (
 sub getName {
     my $self = shift;
 
-    return 'status' ;
+    return 'help' ;
 }
 
 #======================================================================================================================
@@ -40,7 +35,7 @@ sub getName {
 sub getAlias {
     my $self = shift;
 
-    return [ 's' ] ;
+    return [ 'h', '?' ] ;
 }
 
 #======================================================================================================================
@@ -56,32 +51,10 @@ sub getAlias {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Show the current status (store, object, ...)' ] ;
-}
-
-#======================================================================================================================
-# §function     getHelp
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Help = $Command->getHelp()
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the detailed help of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Help | The detailed command help | string
-#======================================================================================================================
-sub getHelp {
-    my $self = shift;
-
-    my $CmdName = $self->getName() ;
-
-    return <<HELP_TEXT
-Description:
-    Show information about the current Store and Object
-
-Usage: 
-    $CmdName
-HELP_TEXT
-
+    return [
+        'Show this help.',
+        'Enter \'help <command>\' for detailed help.'
+    ] ;
 }
 
 #======================================================================================================================
@@ -99,99 +72,147 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
-    $self->{'Shell'}->getConsole()->debug( "Execute command STATUS\n" ) ;
-
-    $self->_showStoreStatus() ;
-    $self->_showObjectStatus() ;
+    my $Console = $self->{'Shell'}->getConsole() ;
+    $Console->debug( "Execute command HELP\n" ) ;
+    
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
+    my $Args = $hArguments->{'@'} ;
+    if ( scalar @$Args ) {
+        $self->_showCommandHelp( $Args->[0] ) ;
+    } else {
+        $self->_showHelp() ;
+    }
+    $Console->output( "\n" ) ;
 
     return;
 }
 
 #======================================================================================================================
-# §function     _showStoreStatus
+# §function     _showCommandHelp
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->_showStoreStatus() 
+# §syntax       $HelpCommand->_showCommandHelp( $CommandName )
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $CommandName | Command name to request its help | string
 #======================================================================================================================
-sub _showStoreStatus {
+sub _showCommandHelp {
     my $self = shift;
+
+    my ( $CommandName ) = @_ ;
 
     my $Shell = $self->{'Shell'} ;
     my $Console = $Shell->getConsole() ;
-    my $ePages = $Shell->{'ePages'} ;
-    
-    if ( $ePages->isStoreActive() ) {
-        $Console->output("\n  %-20s%s\n", 'Store:', $ePages->getStore() ) ;
-        $self->_showLanguageStatus( $ePages->getLanguageInfo() ) ;
+
+    my $Command = $Shell->getCommand( $CommandName ) ;
+    if ( defined $Command ) {
+        $Console->output( "\nCommand : %s", $Command->getName() ) ;
+        my $AliasList = $self->_formatCommandAliasList( $Command ) ;
+        if ( defined $AliasList ) {
+            $Console->output( "\nAliases : %s\n", $AliasList ) ;
+        } else {
+            $Console->output( "\n" ) ;
+        }
+        $Console->output( "\n%s", $Command->getHelp() ) ;
     } else {
-        $Console->output("\n  %-20s%s\n", 'Store:', 'none' ) ;
+        $Console->output( "ERROR: Unknown command '$CommandName'\n" ) ;
     }
 
-    return;
+    return ;
 }
 
 #======================================================================================================================
-# §function     _showLanguageStatus
+# §function     _formatCommandAliasList
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->_showLanguageStatus( $LanguageInfo ) 
+# §syntax       $AliasList = $HelpCommand->_formatCommandAliasList( $Command )
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Command | Command to request its help | object
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $AliasList | The list of alias for the command | string
 #======================================================================================================================
-sub _showLanguageStatus {
+sub _formatCommandAliasList {
     my $self = shift;
 
-    my ( $LanguageInfo ) = @_ ;
+    my ( $Command ) = @_ ;
+
+    my $AliasList = undef ;
     
-    if ( defined $LanguageInfo ) {
-        my $Console = $self->{'Shell'}->getConsole() ;
-        my $DefaultLang = $LanguageInfo->getDefaultCode() ;
-        my $Languages = $LanguageInfo->getLanguages() ;
-        my $LangLabel = 'Languages:' ;
-        for my $LanguageCode ( keys %$Languages) {
-            my $Language = $Languages->{$LanguageCode} ;
-            $Console->output(
-                "  %-20s%s >> %s %s\n",
-                $LangLabel,
-                $Language->{'Code'},
-                $Language->{'Name'},
-                ( $DefaultLang eq $LanguageCode )? '(default)' : ''
-            ) ;
-            $LangLabel = '' ;
+    my $Aliases = $Command->getAlias() ;
+    if ( scalar @$Aliases ) {
+        my $Separator = '' ;
+        foreach my $Alias ( @$Aliases ) {
+            $AliasList .= $Separator.$Alias ;
+            $Separator = ', ' ;
         }
     }
 
-    return;
+    return $AliasList ;
 }
 
 #======================================================================================================================
-# §function     _showObjectStatus
+# §function     _showHelp
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->_showObjectStatus() 
+# §syntax       $HelpCommand->_showHelp()
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #======================================================================================================================
-sub _showObjectStatus {
+sub _showHelp {
     my $self = shift;
 
     my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-    my $ePages = $Shell->{'ePages'} ;
-    my $Object = $ePages->getObject() ;
-    
-    if ( $Object ) {
-        $Console->output("  %-20s%s\n", 'Object:', $Object->alias ) ;
-        $Console->output("  %-20s%s\n", 'ObjectID:', $Object->id ) ;
-        $Console->output("  %-20s%s\n", 'Path:', $Object->get('Path') ) ;
-        $Console->output("  %-20s%s\n\n", 'Class:', $Object->get('Class')->alias ) ;
-    } else {
-        $Console->output("  %-20s%s\n\n", 'Object', 'none' ) ;
+
+    my $CmdNames = $Shell->getCommandNames() ;
+    foreach my $CommandName ( @$CmdNames ) {
+        my $Command = $Shell->getCommand( $CommandName ) ;
+        if ( $Command->getName() ne $self->getName() ) {
+            $self->_showCommandDescription( $Command ) ;
+        }
     }
 
-    return;
+    my $Console = $Shell->getConsole() ;
+    $Console->output("\n") ;
+    $self->_showCommandDescription( $self ) ;
+    $Console->output("\n") ;
+
+    return ;
+}
+
+#======================================================================================================================
+# §function     _showCommandDescription
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $HelpCommand->_showCommandDescription( $Command )
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Command | Command to request its help | object
+#======================================================================================================================
+sub _showCommandDescription {
+    my $self = shift;
+
+    my ( $Command ) = @_ ;
+
+    my $Console = $self->{'Shell'}->getConsole() ;
+
+    my $Name = $Command->getName() ;
+    my $Help = $Command->getDescription() ;
+
+    foreach my $HelpLine ( @$Help ) {
+        $Console->output(
+            "\n  %-15s%s",
+            $Name,
+            $HelpLine
+        ) ;
+
+        $Name = '' ;
+    }
+
+    return ;
 }
 
 1;

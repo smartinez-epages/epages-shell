@@ -1,24 +1,26 @@
 #======================================================================================================================
 # §package      she
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  ePages shell launcher
 #======================================================================================================================
 package she;
 
-use strict ;
+use strict;
 
-use ePages::Shell ;
+use ePages::Shell;
 
-use DE_EPAGES::Core::API::Script qw ( 
-    RunScript 
-) ;
+use DE_EPAGES::Core::API::Script qw (
+    RunScript
+);
 
 sub Main {
-    my $shell = ePages::Shell->new({ 'Arguments' => \@ARGV }) ;
-    $shell->printHeader();
-    $shell->run() ;
 
-    return ;
+    my $shell = ePages::Shell->new({ 'Arguments' => \@ARGV });
+
+    $shell->printHeader();
+    $shell->run();
+
+    return;
 }
 
 RunScript( Sub => \&Main );

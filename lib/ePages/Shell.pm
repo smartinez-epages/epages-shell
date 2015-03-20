@@ -1,25 +1,26 @@
 #======================================================================================================================
 # Shell
 #======================================================================================================================
-package ePages::Shell ;
-use base Shell::Shell ;
+package ePages::Shell;
+use base Shell::Shell;
 
-use strict ;
+use strict;
 
 use DE_EPAGES::Database::API::Connection qw ( 
     RunOnStore 
-) ;
+);
 use DE_EPAGES::Core::API::Error qw (
         ExistsError
         GetError
-    ) ;
-use ePages::ePages ;
+    );
+
+use ePages::ePages;
 
 #======================================================================================================================
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       Shell->new() ;
+# §syntax       Shell->new();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Constructor
 #----------------------------------------------------------------------------------------------------------------------
@@ -28,28 +29,38 @@ use ePages::ePages ;
 sub new {
     my $class = shift;
 
-    my $hOptions = $_[0] // {} ;
+    my $hOptions = $_[0] // {};
 
     my $hAttributes  = {
         'Name'              => 'she',
-        'Title'             => 'SHE: Shell ePages (Beta 2)',
-        'Prompt'            => '[she] ',
+        'Title'             => 'SHE: Shell ePages (Beta 3)',
         'ResetStore'        => 0,
         'ePages'            => ePages::ePages->new(), 
         'Commands'          => [
-            'ePages/Command/Store',
-            'ePages/Command/Path',
-            'ePages/Command/Status',
-            'ePages/Command/Childs',
-            'ePages/Command/Get',
-            'ePages/Command/Set',
-            'ePages/Command/Delete',
-            'Shell/Command/Test',
-        ],
-    } ;
+                                    'ePages::Command::Store',
+                                    'ePages::Command::Path',
+                                    'ePages::Command::Status',
+                                    'ePages::Command::Childs',
+                                    'ePages::Command::Cache',
+                                    'ePages::Command::Get',
+                                    'ePages::Command::Set',
+                                    'ePages::Command::Delete',
+                               ],
+        'Configuration'     => [
+                                    {
+                                        'Name'          => 'prompt',
+                                        'Value'         => '[she] ',
+                                        'Description'   => 'ePages shell prompt'
+                                    },
+                                    {
+                                        'Name'          => 'datefmt',
+                                        'Value'         => 'dd/mm/YYYY HH:MM:SS',
+                                        'Description'   => 'DateTime objects format'
+                                    },
+                               ]
+    };
 
-
-    return $class->SUPER::new( { %$hAttributes, %$hOptions } );
+    return $class->SUPER::new({ %$hAttributes, %$hOptions });
 }
 
 #======================================================================================================================
@@ -109,24 +120,28 @@ HELP_TEXT
 # §description  TODO
 #======================================================================================================================
 sub _run {
-    my $self = shift ;
+    my $self = shift;
 
-    my $Arguments = $self->getArguments() ;
-    my $StoreName = $Arguments->{'@'}->[0] ; 
+    $self->{'ePages'}->open();
+
+    my $Arguments = $self->getArguments();
+    my $StoreName = $Arguments->{'@'}->[0]; 
     if ( defined $StoreName ) {
-        $self->executeCommand( 'use', $StoreName ) ;
+        $self->executeCommand( 'use', $StoreName );
     }
         
     do {
-        $self->{'ResetStore'} = 0 ;
+        $self->{'ResetStore'} = 0;
         if ( defined $self->{'ePages'}->getStore() ) {
-            $self->runOnStore() ;
+            $self->runOnStore();
         } else {
-            $self->SUPER::_run() ;
+            $self->SUPER::_run();
         }
-    } while ( $self->{'ResetStore'} ) ;
+    } while ( $self->{'ResetStore'} );
 
-    return ;
+    $self->{'ePages'}->close();
+
+    return;
 }
 
 #======================================================================================================================
@@ -143,28 +158,28 @@ sub _run {
 # §return       $Name | Description | type
 #======================================================================================================================
 sub runOnStore {
-    my $self = shift ;
+    my $self = shift;
 
-    my $Console = $self->getConsole() ;
-    my $Store = $self->{'ePages'}->getStore() ;
-    $Console->info( "  Connecting to store '$Store' ...\n" ) ;
+    my $Console = $self->getConsole();
+    my $Store = $self->{'ePages'}->getStore();
+    $Console->info( "  Connecting to store '$Store' ...\n" );
     eval {
-        my $Arguments = $self->getArguments() ;
-        my $ObjectPath = $Arguments->{'@'}->[1] // '/' ; 
+        my $Arguments = $self->getArguments();
+        my $ObjectPath = $Arguments->{'@'}->[1] // '/'; 
         RunOnStore(
           'Store' => $Store,
           'Sub'   => sub {
-            $self->{'ePages'}->connect() ;
-            $self->executeCommand( 'cd', $ObjectPath ) ;
-            $self->SUPER::_run() ;
+            $self->{'ePages'}->connect();
+            $self->executeCommand( 'cd', $ObjectPath );
+            $self->SUPER::_run();
           }
-        ) ;
+        );
     };
     if ( $@ ) {
-        $self->error( $@ ) ;
-        $Console->output( "\n" ) ;
-        $self->{'ePages'}->reset() ;
-        $self->SUPER::_run() ;
+        $self->error( $@ );
+        $Console->output( "\n" );
+        $self->{'ePages'}->reset();
+        $self->SUPER::_run();
     }
 
     return;
@@ -183,16 +198,16 @@ sub runOnStore {
 sub error {
     my $self = shift;
 
-    my $Error = @_ ;
+    my $Error = @_;
     
     if ( ExistsError() ) {
-        $Error = GetError() ;
-        $Error = sprintf( "[%s] '%s'", $Error->{'Code'}, $Error->{'Message'} ) ;
+        $Error = GetError();
+        $Error = sprintf( "[%s] '%s'", $Error->{'Code'}, $Error->{'Message'} );
     }
 
-    $self->getConsole()->error( $Error ) ;
+    $self->getConsole()->error( $Error );
 
-    return ;
+    return;
 }
 
 1;

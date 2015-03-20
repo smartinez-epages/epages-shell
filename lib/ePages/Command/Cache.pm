@@ -1,110 +1,93 @@
 #======================================================================================================================
-# §package      Shell::Consoles::BatchConsole
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# Cache
 #======================================================================================================================
-package Shell::Consoles::BatchConsole;
-use base Shell::Console;
+package ePages::Command::Cache;
+use base Shell::Command::Command;
 
-use strict ;
+use strict;
 
-use Term::ReadKey;
+use DE_EPAGES::Object::API::Factory qw ( 
+    LoadObject 
+);
 
 #======================================================================================================================
-# §function     open
+# §function     getName
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Console->open()
+# §syntax       $CommandName = $Command->getName();
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Returns the name of the command
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Name | the command name | string
 #======================================================================================================================
-sub open { 
+sub getName {
     my $self = shift;
-    
-    my $FileHandler = $self->{'BatchFileHandler'} ;
-    if ( not defined $FileHandler ) {
-        my $BatchFileName = $self->{'FileName'} ;
-        if ( open( $FileHandler, '<', $BatchFileName ) ) {
-            $self->{'BatchFileHandler'} = $FileHandler ;
-        } else {
-            die "\nERROR: Could not open batch file '$BatchFileName'\n" ;
-        }
-    }
-    
-    return ; 
+
+    return 'cache';
 }
 
 #======================================================================================================================
-# §function     close
+# §function     getDescription
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Console->close()
+# §syntax       $aDescription = $Command->getDescription();
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Returns a list of text lines with the short description for the command.
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $aDescription | Description for the command | array.ref
 #======================================================================================================================
-sub close { 
+sub getDescription {
     my $self = shift;
 
-    my $FileHandler = $self->{'BatchFileHandler'} ;
-    if ( defined $FileHandler ) {
-        close( $FileHandler ) ;
-        $self->{'BatchFileHandler'} = undef ;
-    }    
-    return ; 
+    return [ 'Reset local eages objects cache' ];
 }
 
 #======================================================================================================================
-# §function     prompt
+# §function     getHelp
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Input = $Console->prompt( $Format, ... )
+# §syntax       $Help = $Command->getHelp()
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Returns the detailed help of the command
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $Format | TODO | string
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Input | TODO | string
+# §return       $Help | The detailed command help | string
 #======================================================================================================================
-sub prompt {
+sub getHelp {
     my $self = shift;
 
-    my $InputLine = '' ;
-    my $FileHandler = $self->{'BatchFileHandler'} ;
-    if ( defined $FileHandler ) {
-        $InputLine =  <$FileHandler> ;
-        if ( not defined $InputLine ) {
-            return 'exit' ;
-        }
-        if ( $self->{'Prompt'} ) {
-            my $Format = shift ;
-            printf( $Format, @_ ) ;
-            printf( $InputLine ) ;
-        }
-    }
-    $InputLine =~ s/[\r\n]//g ;
-    
-    return $InputLine ;
+    my $CmdName = $self->getName();
+
+    return <<HELP_TEXT
+Description:
+    Resets the local cache of epages objects
+
+Usage: 
+    $CmdName
+HELP_TEXT
+
 }
 
 #======================================================================================================================
-# §function     output
+# §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Console->output( $Format, ... )
+# §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $Format | TODO | string
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | TODO | type
+# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
-sub output {
+sub execute {
     my $self = shift;
 
-    my $Format = shift ;
-    printf( $Format, @_ ) ;
+    my ( $CommandArgs ) = @_;
 
-    return 1 ;
+print "cache.execute\n";
+    my $Shell = $self->{'Shell'} ;
+    $Shell->getConsole()->debug( "Execute command CACHE\n" );
+    $Shell->{'ePages'}->updateCache() ;
+
+    return;
 }
 
 1;

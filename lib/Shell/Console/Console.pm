@@ -1,9 +1,9 @@
 #======================================================================================================================
-# §package      Shell::Console
+# §package      Shell::Console::Console
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Abstract Console Class
 #======================================================================================================================
-package Shell::Console;
+package Shell::Console::Console;
 
 use strict ;
 
@@ -13,8 +13,8 @@ our @EXPORT_OK = qw (
     NewConsole
 ) ;
 
-use Shell::Consoles::TerminalConsole ;
-use Shell::Consoles::BatchConsole ;
+use Shell::Console::TerminalConsole;
+use Shell::Console::BatchConsole;
 
 use Data::Dumper;
 
@@ -33,22 +33,23 @@ $Data::Dumper::Indent = 1 ;
 # §return       $Console | TODO | object
 #======================================================================================================================
 sub NewConsole {
-    my ( $Shell ) = @_ ;
+    my ($Shell) = @_ ;
 
     my $Console = undef ;
     my $Arguments = $Shell->getArguments() ;
     my $BatchFileName = $Arguments->{'BatchFileName'} ;
-    
+
     if ( defined $BatchFileName ) {
-        $Console =  Shell::Consoles::BatchConsole->new({ 
+        $Console =  Shell::Console::BatchConsole->new({ 
                         'FileName'  => $BatchFileName, 
                         'Prompt'    => $Arguments->{'Prompt'}
                     }) ; 
     } else {
-    my $BatchFileName = $Arguments->{'BatchFileName'} ;
-        $Console =  Shell::Consoles::TerminalConsole->new({ 
-                        'Pager' => not $Arguments->{'NoPager'}
-                    }) ; 
+        my $PagerConfigProperty = $Shell->getConfiguration()->getProperty('pager');
+        $Console =  Shell::Console::TerminalConsole->new({
+                        'Pager' => $PagerConfigProperty->getValue()
+                    });
+        $PagerConfigProperty->addListener($Console);
     }
 
     return $Console ;

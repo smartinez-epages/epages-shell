@@ -2,7 +2,7 @@
 # Get
 #======================================================================================================================
 package ePages::Command::Get ;
-use base Shell::Command ;
+use base Shell::Command::Command;
 
 use strict ;
 

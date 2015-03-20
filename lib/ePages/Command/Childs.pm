@@ -2,7 +2,7 @@
 # Childs
 #======================================================================================================================
 package ePages::Command::Childs ;
-use base Shell::Command ;
+use base Shell::Command::Command;
 
 use strict ;
 

@@ -1,11 +1,10 @@
 #======================================================================================================================
-# Config
+# Clear
 #======================================================================================================================
-package Shell::Command::Config ;
+package Shell::BasicCommand::Clear;
+use base Shell::Command::Command;
 
-use base Shell::Command ;
-
-use strict ;
+use strict;
 
 #======================================================================================================================
 # §function     getName
@@ -20,7 +19,23 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'config' ;
+    return 'clear' ;
+}
+
+#======================================================================================================================
+# §function     getAlias
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $CommandAlias = $Command->getAlias() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns an array with all the alias for this command
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $AliasList | All the alias for this command | array.ref
+#======================================================================================================================
+sub getAlias {
+    my $self = shift;
+
+    return [ 'cls' ] ;
 }
 
 #======================================================================================================================
@@ -36,7 +51,7 @@ sub getName {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Set/Get the shell configuration properties' ] ;
+    return [ 'Clears the console' ] ;
 }
 
 #======================================================================================================================
@@ -45,7 +60,7 @@ sub getDescription {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
@@ -54,14 +69,9 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
-    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
+    $self->{'Shell'}->getConsole()->debug( "Execute command CLEAR\n" ) ;
 
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-    
-    $Console->debug( "Execute command CONFIG\n" ) ;
-    $Shell->{'Debug'} = ! $Shell->{'Debug'} ;
-    $Console->output( "Debug : %s\n", ( $Shell->{'Debug'} )? 'on' : 'off' ) ;
+    system("clear") ;
 
     return;
 }

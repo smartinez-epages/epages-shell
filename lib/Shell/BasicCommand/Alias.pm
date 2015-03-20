@@ -1,10 +1,10 @@
 #======================================================================================================================
-# Echo
+# Alias
 #======================================================================================================================
-package Shell::Command::Echo ;
-use base Shell::Command ;
+package Shell::BasicCommand::Alias;
+use base Shell::Command::Command;
 
-use strict ;
+use strict;
 
 #======================================================================================================================
 # §function     getName
@@ -19,7 +19,23 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'echo' ;
+    return 'alias' ;
+}
+
+#======================================================================================================================
+# §function     getAlias
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $CommandAlias = $Command->getAlias() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns an array with all the alias for this command
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $AliasList | All the alias for this command | array.ref
+#======================================================================================================================
+sub getAlias {
+    my $self = shift;
+
+    return [ 'al' ] ;
 }
 
 #======================================================================================================================
@@ -35,7 +51,9 @@ sub getName {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Echoes the arguments' ] ;
+    return [
+        'Show the alias for the available commands.',
+    ] ;
 }
 
 #======================================================================================================================
@@ -44,7 +62,7 @@ sub getDescription {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Executes the command with the specified arguments
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
@@ -53,12 +71,48 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
+    my $Shell = $self->{'Shell'} ;
+    my $Console = $Shell->getConsole() ;
+    
+    $Console->debug( "Execute command ALIAS\n" ) ;
+
+    $Console->output( "\nAvailable commands and their alias ( - means no alias ) :\n\n" ) ;
+    my $CmdNames = $Shell->getCommandNames() ;
+    foreach my $CommandName ( @$CmdNames ) {
+        $self->_showComandAlias( $Shell->getCommand( $CommandName ) ) ;
+    }
+    $Console->output( "\n" ) ;
+
+    return;
+}
+
+#======================================================================================================================
+# §function     _showComandAlias
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Command->_showComandAlias( $Command ) 
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _showComandAlias {
+    my $self = shift;
+
+    my ( $Command ) = @_ ;
+
     my $Console = $self->{'Shell'}->getConsole() ;
     
-    $Console->debug( "Execute command ECHO\n" ) ;
+    my $Aliases = $Command->getAlias() ;
+    if ( ( scalar @$Aliases ) == 0 ) {
+        $Aliases = [ '-'] ;
+    }
+    $Console->output( "  - %-20s", $Command->getName() ) ;
+    my $Separator = '' ;
+    foreach my $Alias ( @$Aliases ) {
+        $Console->output( "%s%s", $Separator, $Alias) ;
+        $Separator = ', ' ;
+    }
+    $Console->output( "\n" ) ;
 
-    $Console->output( "$CommandArgs\n" ) ;
-    
     return;
 }
 

@@ -2,7 +2,7 @@
 # Delete
 #======================================================================================================================
 package ePages::Command::Delete ;
-use base Shell::Command ;
+use base Shell::Command::Command;
 
 use strict ;
 

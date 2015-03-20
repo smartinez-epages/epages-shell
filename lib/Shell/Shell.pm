@@ -5,26 +5,26 @@
 #======================================================================================================================
 package Shell::Shell;
 
-use strict ;
+use strict;
 
-use Shell::Console qw (
+use Shell::Configuration::Configuration;
+use Shell::Command::CommandLoader;
+use Shell::Command::Arguments; 
+use Shell::Console::Console qw (
     NewConsole
-) ;
+);
 
-use Shell::CommandLoader ;
-use Shell::Arguments ; 
-
-my $BasicCommandsPath = 'Shell/Command' ;
+my $BasicCommandsPath = 'Shell::BasicCommand';
 
 my $aBasicCommandsList = [
-    "$BasicCommandsPath/Alias",
-    "$BasicCommandsPath/Clear",
-    "$BasicCommandsPath/Config",
-    "$BasicCommandsPath/Echo",
-    "$BasicCommandsPath/Pause",
-    "$BasicCommandsPath/Quiet",
-    "$BasicCommandsPath/Quit",
-    "$BasicCommandsPath/Help"
+    'Shell::BasicCommand::Alias',
+    'Shell::BasicCommand::Clear',
+    'Shell::BasicCommand::Config',
+    'Shell::BasicCommand::Echo',
+    'Shell::BasicCommand::Pause',
+    'Shell::BasicCommand::Quiet',
+    'Shell::BasicCommand::Quit',
+    'Shell::BasicCommand::Help'
 ] ;
 
 #======================================================================================================================
@@ -48,18 +48,69 @@ sub new {
         'Exit'          => 0,
         'Name'          => 'she',
         'Title'         => 'Simple shell v1',
-        'HelpTxt'       => "Type 'help' or '?' for help\n",
-        'Debug'         => 0,
-        'Prompt'        => '> ',
+        'HelpTxt'       => 'Type \'help\' or \'?\' for help\n',
+        'Debug'         => 0
     } ;
-    
+
     my $self = bless( { %$hAttributes, %$hOptions }, $class );
 
-    $self->_parseArguments() ;
-    $self->_initConsole() ;
-    $self->_initCommands() ;
-    
+    $self->_initConfiguration();
+    $self->_parseArguments();
+    $self->_initConsole();
+    $self->_initCommands();
+
     return $self ;
+}
+
+#======================================================================================================================
+# §function     _initConfiguration
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->_initConfiguration()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _initConfiguration {
+    my $self = shift;
+
+    my $Configuration = 
+        Shell::Configuration::Configuration->new([
+            {
+                'Name'          => 'verbose',
+                'Value'         => 0,
+                'Description'   => 'Verbose level (0: mute, 1: normal, 2: debug)',
+                'Validator'     => sub {
+                    return shift =~ /^0|1|2$/;
+                },
+            },
+            {
+                'Name'          => 'prompt',
+                'Value'         => '> ',
+                'Description'   => 'Shell prompt'
+            },
+            {
+                'Name'          => 'pager',
+                'Value'         => 'on',
+                'Description'   => 'Pager enable (on) / disable (off)',
+                'Validator'     => sub {
+                    return shift =~ /^on|off$/i;
+                },
+                'Filter'        => sub {
+                    return lc(shift);
+                }
+            }
+       ]);
+
+    my $aSubclassConfiguration = $self->{'Configuration'};
+    if (defined $aSubclassConfiguration) {
+        foreach my $Property (@$aSubclassConfiguration) {
+            $Configuration->addProperty($Property);
+        }
+    }
+
+    $self->{'Configuration'} = $Configuration;
+
+    return;
 }
 
 #======================================================================================================================
@@ -73,17 +124,16 @@ sub new {
 sub _parseArguments {
     my $self = shift;
 
-    my $Arguments = Shell::Arguments->new( $self->_getArgumentsMetaData() ) ;
-
+    my $Arguments = Shell::Command::Arguments->new( $self->_getArgumentsMetaData() ) ;
     $Arguments->parseFromArray( $self->{'Arguments'} ) ;
-    
     $self->{'Arguments'} = $Arguments ;
-    
-    if ( $Arguments->getArguments()->{'Help'} ) {
-        $self->help() ;    
+    if ( $Arguments->getArguments()->{'NoPager'} ) {
+        $self->getConfiguration()->setPropertyValue('pager', 'off');
     }
-    
-    
+    if ( $Arguments->getArguments()->{'Help'} ) {
+        $self->help();
+    }
+
     return ;
 }
 
@@ -139,7 +189,7 @@ sub _initCommands {
     my $aCommandsList = [] ;
     $self->{'CommandsList'} = $aCommandsList ;
     
-    my $CommandLoader = Shell::CommandLoader->new( $self ) ;
+    my $CommandLoader = Shell::Command::CommandLoader->new( $self ) ;
     $self->_loadCommands( $CommandLoader, $aBasicCommandsList ) ;
     $self->_loadCommands( $CommandLoader, $self->{'Commands'} ) ;
     
@@ -191,6 +241,22 @@ sub _loadCommands {
     }
 
     return ;
+}
+
+#======================================================================================================================
+# §function     getConfiguration
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->getConfiguration()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Console | TODO | object
+#======================================================================================================================
+sub getConfiguration {
+    my $self = shift;
+
+    return $self->{'Configuration'} ;
 }
 
 #======================================================================================================================
@@ -382,9 +448,10 @@ sub _run {
     my $self = shift;
 
     my $Console = $self->getConsole() ;
+    my $Configuration = $self->getConfiguration();
     $self->{'Exit'} = 0 ;
     while ( not $self->{'Exit'} ) {
-        my $UserInput = $Console->prompt( "%s", $self->{'Prompt'} ) ;
+        my $UserInput = $Console->prompt("%s", $Configuration->getPropertyValue('prompt'));
         $UserInput =~ m/^\s*(\S*)\s*(.*)/ ;
         my $CommandName = $1 ;
         my $CommandArgs = $2 ;

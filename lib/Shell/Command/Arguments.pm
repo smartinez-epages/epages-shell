@@ -2,9 +2,8 @@
 # Arguments
 #
 #   TODO
-#
 #======================================================================================================================
-package Shell::Arguments ;
+package Shell::Command::Arguments;
 
 use strict;
 

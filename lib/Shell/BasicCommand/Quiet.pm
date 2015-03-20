@@ -1,10 +1,10 @@
 #======================================================================================================================
-# Quit
+# Quiet
 #======================================================================================================================
-package Shell::Command::Quit ;
-use base Shell::Command ;
+package Shell::BasicCommand::Quiet;
+use base Shell::Command::Command;
 
-use strict ;
+use strict;
 
 #======================================================================================================================
 # §function     getName
@@ -19,23 +19,7 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'quit' ;
-}
-
-#======================================================================================================================
-# §function     getAlias
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
-#======================================================================================================================
-sub getAlias {
-    my $self = shift;
-
-    return [ 'exit', 'q' ] ;
+    return 'quiet' ;
 }
 
 #======================================================================================================================
@@ -51,7 +35,7 @@ sub getAlias {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Exits the shell' ] ;
+    return [ 'Enable/Disable the commands output' ] ;
 }
 
 #======================================================================================================================
@@ -69,11 +53,26 @@ sub execute {
 
     my ( $CommandArgs ) = @_ ;
 
-    my $Shell = $self->{'Shell'} ;
+    my $Console = $self->{'Shell'}->getConsole() ;
+    
+    $Console->debug( "Execute command QUIET\n" ) ;
 
-    $Shell->getConsole()->debug( "Execute command QUIT\n" ) ;
-    $Shell->exit( 1 ) ;
+    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
 
+    my $Quiet = lc ( $hArguments->{'@'}->[0] ) ;
+
+    my $Verbosity = $Console->getVerbosity() ;
+    
+    if ( $Quiet eq 'on' )  {
+        $Verbosity = 0 ;
+    } elsif ( $Quiet eq 'off' )  {
+        $Verbosity = 1 ;
+    } 
+    
+    $Console->output( "Quite mode is %s\n", ( ( $Verbosity )? 'OFF' : 'ON' ) ) ;
+
+    $Console->setVerbosity( $Verbosity ) ;
+    
     return;
 }
 

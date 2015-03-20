@@ -1,8 +1,8 @@
 #======================================================================================================================
 # Test
 #======================================================================================================================
-package Test::Shell ;
-use base Shell::Shell ;
+package Test::Shell;
+use base Shell::Shell;
 
 use strict;
 
@@ -10,24 +10,32 @@ use strict;
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       Shell->new() ;
+# §syntax       Shell->new();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Constructor
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Object | The new object instance | Object
 #======================================================================================================================
 sub new {
-    my $Class = shift;
+    my $class = shift;
 
-    my $self  = $Class->SUPER::new({
-        'Title'     => 'Testing shell',
-        'Prompt'    => '[zs] ',
-        'Commands'  => [
-            'Command/Test',
-        ]
-    }) ;
+    my $hOptions = $_[0] // {};
 
-    return $self;
+    my $hAttributes  = {
+        'Title'             => 'Testing shell',
+        'Commands'          => [
+                                    'Test::Command::Test',
+                               ],
+        'Configuration'     => [
+                                    {
+                                        'Name'          => 'prompt',
+                                        'Value'         => '[t] ',
+                                        'Description'   => 'Test shell prompt'
+                                    },
+                               ]
+    };
+
+    return $class->SUPER::new({ %$hAttributes, %$hOptions });
 }
 
 1;

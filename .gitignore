@@ -1,0 +1,12 @@
+CVS
+.perlcriticrc
+.perltidyrc
+.project
+.includepath
+.settings/
+.#*
+makefile
+*.bak
+*.zargo~
+*~
+*#

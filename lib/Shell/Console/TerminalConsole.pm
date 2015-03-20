@@ -1,10 +1,10 @@
 #======================================================================================================================
-# §package      Shell::Consoles::Terminalconsole
+# §package      Shell::Console::Impl::Terminalconsole
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Concrete Implementation for a Terminal Console
 #======================================================================================================================
-package Shell::Consoles::TerminalConsole;
-use base Shell::Console;
+package Shell::Console::TerminalConsole;
+use base Shell::Console::Console;
 
 use strict ;
 
@@ -31,16 +31,36 @@ sub new {
 
     my ( $hOptions ) = @_ ;
 
-    system( 'stty erase ^H' ) ;
+#    system( 'stty erase ^?' ) ;
 
     my $hAttributes = {
-        'Pager'         => 1,
+        'Pager'         => 'on',
         'PagerCmd'      => 0,
         'PagerMax'      => 0,
         'PagerCount'    => 0
     } ;
     
     return $class->SUPER::new( { %$hAttributes, %$hOptions }, $class );
+}
+
+
+#======================================================================================================================
+# §function     notifyConfigChange
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Console->notifyConfigChange($PeropertyName, $PropertyValue)
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub notifyConfigChange() {
+    my $self = shift;
+    my ($PropertyName, $PropertyValue) = @_;
+    
+    if ($PropertyName eq 'pager') {
+        $self->{'Pager'} = $PropertyValue;
+    }
+
+    return;
 }
 
 #======================================================================================================================
@@ -54,8 +74,8 @@ sub new {
 sub reset() {
     my $self = shift;
 
-    $self->{'PagerCmd'} = $self->{'Pager'} ;
-    if ( $self->{'PagerCmd'} ) {
+    $self->{'PagerCmd'} = ($self->{'Pager'} eq 'on');
+    if ($self->{'PagerCmd'}) {
         $self->{'PagerCount'} =  0 ;
         $self->{'PagerMax'} =  (GetTerminalSize())[1] - 2 ;
     }
@@ -103,7 +123,7 @@ sub output {
 
     my $Format = shift ;
     my $Text = sprintf( $Format, @_ ) ;
-    if ( $self->{'PagerCmd'} ) {
+    if ($self->{'PagerCmd'}) {
         return $self->_printWithPager( $Text ) ;
     } else {
         print( $Text ) ;
@@ -168,7 +188,7 @@ sub _checkPager {
         if ( $KeyPressed == 27 ) {
             return 0 ;
         } elsif ( $KeyPressed == 10 ) {
-            $self->{'PagerCmd'} = 0 ;
+            $self->{'PagerCmd'} = 0;
         }
     } 
 

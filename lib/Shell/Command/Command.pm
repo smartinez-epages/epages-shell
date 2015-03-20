@@ -1,10 +1,44 @@
 #======================================================================================================================
-# Help
+#   Command
+#
+#   Abstract class for any command we want to run in the Shell
+#
 #======================================================================================================================
-package Shell::Command::Help ;
-use base Shell::Command ;
+package Shell::Command::Command;
 
 use strict;
+
+use Shell::Command::Arguments; 
+
+#======================================================================================================================
+# §function     new
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       Command->new( $Shell, $Options )
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Constructor
+#----------------------------------------------------------------------------------------------------------------------
+# §input        $Shell | The shell which creates and executes this command | object
+# §input        $Options | Optionally a command could be build with some specific arguments | unknown
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Object | The new object instance | Object
+#======================================================================================================================
+sub new {
+    my $Class = shift;
+    my ($Shell, $Options) = @_ ;
+    
+    my $hAttributes = {
+        'Shell'         => $Shell,
+        'Options'       => $Options,
+    };
+
+    my $self = bless( $hAttributes, $Class );
+    
+    $self->{'Arguments'} = Shell::Command::Arguments->new( $self->getArguments() ) ;
+    
+    return $self ; 
+    
+}
 
 #======================================================================================================================
 # §function     getName
@@ -19,7 +53,7 @@ use strict;
 sub getName {
     my $self = shift;
 
-    return 'help' ;
+    return 'cmd' ;
 }
 
 #======================================================================================================================
@@ -35,7 +69,23 @@ sub getName {
 sub getAlias {
     my $self = shift;
 
-    return [ 'h', '?' ] ;
+    return [] ;
+}
+
+#======================================================================================================================
+# §function     getArguments
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $aArguments = $Command->getArguments() ;
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArgumens | Arguments specification for the command | hash.ref
+#======================================================================================================================
+sub getArguments {
+    my $self = shift;
+
+    return {} ;
 }
 
 #======================================================================================================================
@@ -51,10 +101,29 @@ sub getAlias {
 sub getDescription {
     my $self = shift;
 
-    return [
-        'Show this help.',
-        'Enter \'help <command>\' for detailed help.'
-    ] ;
+    return [ 'This is the abstract command class' ] ;
+}
+
+#======================================================================================================================
+# §function     getHelp
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Help = $Command->getHelp()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  Returns the detailed help of the command
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Help | The detailed command help | string
+#======================================================================================================================
+sub getHelp {
+    my $self = shift;
+
+    my $Help = "Description:\n" ;
+    my $Description = $self->getDescription() ;
+    foreach my $HelpLine ( @$Description ) {
+        $Help .= "     $HelpLine\n" ;
+    }
+
+    return $Help ;
 }
 
 #======================================================================================================================
@@ -63,7 +132,7 @@ sub getDescription {
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Command->execute( $CommandArgs ) 
 #----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
 # §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
@@ -73,146 +142,31 @@ sub execute {
     my ( $CommandArgs ) = @_ ;
 
     my $Console = $self->{'Shell'}->getConsole() ;
-    $Console->debug( "Execute command HELP\n" ) ;
     
-    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
-    my $Args = $hArguments->{'@'} ;
-    if ( scalar @$Args ) {
-        $self->_showCommandHelp( $Args->[0] ) ;
-    } else {
-        $self->_showHelp() ;
-    }
-    $Console->output( "\n" ) ;
+    $Console->debug( "Execute command (Abstract Class!)\n" ) ;
+    $Console->output("Nothing to do !\n") ;
 
     return;
 }
 
 #======================================================================================================================
-# §function     _showCommandHelp
+# §function     _parseArguments
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $HelpCommand->_showCommandHelp( $CommandName )
+# §syntax       $Shell->_parseArguments( $CommandArgs )
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandName | Command name to request its help | string
+# §input        $CommandArgs | TODO | string
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $hArguments | TODO | hash.ref
 #======================================================================================================================
-sub _showCommandHelp {
+sub _parseArguments {
     my $self = shift;
 
-    my ( $CommandName ) = @_ ;
+    my ( $CommandArgs ) = @_ ;
 
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-
-    my $Command = $Shell->getCommand( $CommandName ) ;
-    if ( defined $Command ) {
-        $Console->output( "\nCommand : %s", $Command->getName() ) ;
-        my $AliasList = $self->_formatCommandAliasList( $Command ) ;
-        if ( defined $AliasList ) {
-            $Console->output( "\nAliases : %s\n", $AliasList ) ;
-        } else {
-            $Console->output( "\n" ) ;
-        }
-        $Console->output( "\n%s", $Command->getHelp() ) ;
-    } else {
-        $Console->output( "ERROR: Unknown command '$CommandName'\n" ) ;
-    }
-
-    return ;
-}
-
-#======================================================================================================================
-# §function     _formatCommandAliasList
-# §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $AliasList = $HelpCommand->_formatCommandAliasList( $Command )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $Command | Command to request its help | object
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | The list of alias for the command | string
-#======================================================================================================================
-sub _formatCommandAliasList {
-    my $self = shift;
-
-    my ( $Command ) = @_ ;
-
-    my $AliasList = undef ;
-    
-    my $Aliases = $Command->getAlias() ;
-    if ( scalar @$Aliases ) {
-        my $Separator = '' ;
-        foreach my $Alias ( @$Aliases ) {
-            $AliasList .= $Separator.$Alias ;
-            $Separator = ', ' ;
-        }
-    }
-
-    return $AliasList ;
-}
-
-#======================================================================================================================
-# §function     _showHelp
-# §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $HelpCommand->_showHelp()
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#======================================================================================================================
-sub _showHelp {
-    my $self = shift;
-
-    my $Shell = $self->{'Shell'} ;
-
-    my $CmdNames = $Shell->getCommandNames() ;
-    foreach my $CommandName ( @$CmdNames ) {
-        my $Command = $Shell->getCommand( $CommandName ) ;
-        if ( $Command->getName() ne $self->getName() ) {
-            $self->_showCommandDescription( $Command ) ;
-        }
-    }
-
-    my $Console = $Shell->getConsole() ;
-    $Console->output("\n") ;
-    $self->_showCommandDescription( $self ) ;
-    $Console->output("\n") ;
-
-    return ;
-}
-
-#======================================================================================================================
-# §function     _showCommandDescription
-# §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $HelpCommand->_showCommandDescription( $Command )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $Command | Command to request its help | object
-#======================================================================================================================
-sub _showCommandDescription {
-    my $self = shift;
-
-    my ( $Command ) = @_ ;
-
-    my $Console = $self->{'Shell'}->getConsole() ;
-
-    my $Name = $Command->getName() ;
-    my $Help = $Command->getDescription() ;
-
-    foreach my $HelpLine ( @$Help ) {
-        $Console->output(
-            "\n  %-15s%s",
-            $Name,
-            $HelpLine
-        ) ;
-
-        $Name = '' ;
-    }
-
-    return ;
+    return $self->{'Arguments'}->parseFromString( $CommandArgs ) ;
 }
 
 1;

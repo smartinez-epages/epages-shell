@@ -1,16 +1,16 @@
 #======================================================================================================================
 # Test
 #======================================================================================================================
-package Shell::Command::Test ;
-use base Shell::Command ;
+package Test::Command::Test;
+use base Shell::Command::Command;
 
-use strict ;
+use strict;
 
 #======================================================================================================================
 # §function     getName
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandName = $Command->getName() ;
+# §syntax       $CommandName = $Command->getName();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Returns the name of the command
 #----------------------------------------------------------------------------------------------------------------------
@@ -19,14 +19,14 @@ use strict ;
 sub getName {
     my $self = shift;
 
-    return 'test' ;
+    return 'test';
 }
 
 #======================================================================================================================
 # §function     getAlias
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
+# §syntax       $CommandAlias = $Command->getAlias();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Returns an array with all the alias for this command
 #----------------------------------------------------------------------------------------------------------------------
@@ -35,14 +35,14 @@ sub getName {
 sub getAlias {
     my $self = shift;
 
-    return [ 't', 'tst' ] ;
+    return [ 't', 'tst' ];
 }
 
 #======================================================================================================================
 # §function     getArguments
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aArguments = $Command->getArguments() ;
+# §syntax       $aArguments = $Command->getArguments();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
 #----------------------------------------------------------------------------------------------------------------------
@@ -55,14 +55,14 @@ sub getArguments {
         'flag'  => [ 'f', 0 ],
         'one'   => [ 'one=i', 1 ],
         'two'   => [ 'two=s', undef ],
-    } ;
+    };
 }
 
 #======================================================================================================================
 # §function     getDescription
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aDescription = $Command->getDescription() ;
+# §syntax       $aDescription = $Command->getDescription();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Returns a list of text lines with the short description for the command.
 #----------------------------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ sub getArguments {
 sub getDescription {
     my $self = shift;
 
-    return [ 'Test command' ] ;
+    return [ 'Test command' ];
 }
 
 #======================================================================================================================
@@ -87,13 +87,13 @@ sub getDescription {
 sub getHelp {
     my $self = shift;
 
-    my $CmdName = $self->getName() ;
+    my $CmdName = $self->getName();
 
     return <<HELP_TEXT
 Description:
     This is a test command which simply show the provided arguments ...
 
-Usage: 
+Usage:
     $CmdName [Flags] [Options] args ...
 
 Flags:
@@ -116,7 +116,7 @@ HELP_TEXT
 # §function     execute
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->execute( $CommandArgs ) 
+# §syntax       $Command->execute( $CommandArgs )
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Executes the command with the specified arguments
 #----------------------------------------------------------------------------------------------------------------------
@@ -125,30 +125,30 @@ HELP_TEXT
 sub execute {
     my $self = shift;
 
-    my ( $CommandArgs ) = @_ ;
+    my ( $CommandArgs ) = @_;
 
-    my $hArguments = $self->_parseArguments( $CommandArgs ) ;
+    my $hArguments = $self->_parseArguments( $CommandArgs );
 
-    my $Console = $self->{'Shell'}->getConsole() ;
-    
-    $Console->debug( "Execute command TEST\n" ) ;
+    my $Console = $self->{'Shell'}->getConsole();
 
-    $Console->output( "\nExample of a shell command with arguments.\n\n" ) ;
-    $Console->output( 
-        "flag  %s\none   %s\ntwo   '%s'\n", 
+    $Console->debug( "Execute command TEST\n" );
+
+    $Console->output( "\nExample of a shell command with arguments.\n\n" );
+    $Console->output(
+        "flag  %s\none   %s\ntwo   '%s'\n",
         $hArguments->{'flag'},
         $hArguments->{'one'},
         $hArguments->{'two'}
-    ) ;
+    );
 
-    my $aArgs = $hArguments->{'@'} ;
+    my $aArgs = $hArguments->{'@'};
     if ( scalar @$aArgs ) {
-        $Console->output( "\nargs:\n" ) ;
+        $Console->output( "\nargs:\n" );
         foreach my $Arg ( @$aArgs ) {
-            $Console->output( "%10s%s\n", '', $Arg ) ;
+            $Console->output( "%10s%s\n", '', $Arg );
         }
     } else {
-        $Console->output( "%-10s%s\n", 'args', 'none' ) ;
+        $Console->output( "%-10s%s\n", 'args', 'none' );
     }
 
     return;

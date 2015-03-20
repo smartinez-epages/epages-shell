@@ -1,21 +1,24 @@
 #======================================================================================================================
 # ePages
 #======================================================================================================================
-package ePages::ePages ;
+package ePages::ePages;
 
-use strict ;
+use strict;
 
-use DE_EPAGES::Object::API::Factory qw ( 
-    LoadRootObject 
-) ;
+use DE_EPAGES::WebInterface::API::MessageCenter;
+use DE_EPAGES::DataCache::API::Cache qw ( GetTouched ResetTouched UpdateLocal UpdateTouched );
 
-use ePages::LanguageInfo ;
+use DE_EPAGES::Object::API::Factory qw (
+    LoadRootObject
+);
+
+use ePages::LanguageInfo;
 
 #======================================================================================================================
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       ePages->new() ;
+# §syntax       ePages->new();
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Constructor
 #----------------------------------------------------------------------------------------------------------------------
@@ -24,11 +27,100 @@ use ePages::LanguageInfo ;
 sub new {
     my $class = shift;
 
-    my $self = bless({}, $class) ;
-    
-    $self->reset() ;
-    
-    return $self ;
+    my $self = bless({}, $class);
+
+    return $self;
+}
+
+#======================================================================================================================
+# §function     open
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $ePages->open()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub open {
+    my $self = shift;
+
+print "epages.open\n";
+    $self->reset();
+
+    my $MessageCenter = 
+        DE_EPAGES::WebInterface::API::MessageCenter->new(
+            AppServerAddress => '192.168.56.10',
+            AppServerPort    => '10042',
+            PoolName         => 'DefaultPool',
+            Priority         => 0,
+        );
+
+    $MessageCenter->connect();
+    $MessageCenter->sendInitialFreeRequest();
+    $self->{'MessageCenter'} = $MessageCenter;
+
+    return;
+}
+
+#======================================================================================================================
+# §function     close
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $ePages->close()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub close {
+    my $self = shift;
+
+print "epages.close\n";
+    my $MessageCenter = $self->{'MessageCenter'};
+    if (defined $MessageCenter) {
+print "messagecenter.close\n";
+        $MessageCenter->close();
+        $self->{'MessageCenter'} = undef;
+    }
+
+    $self->reset();
+
+    return;
+}
+
+#======================================================================================================================
+# §function     updateCache
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $ePages->updateCache()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub updateCache {
+    my $self = shift;
+
+print "epages.updateCache\n";
+    my $MessageCenter = $self->{'MessageCenter'};
+    if (defined $MessageCenter) {
+print "messagecenter.sendIdleRequest\n";
+        $MessageCenter->sendIdleRequest();
+        ResetTouched();
+    }
+
+    return;
+}
+
+#======================================================================================================================
+# §function     getMessageCenter
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $MessageCenter = $ePages->getMessageCenter()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $MessageCenter | The MessageCenter object | object
+#======================================================================================================================
+sub getMessageCenter {
+    my $self = shift;
+
+    return $self->{'MessageCenter'};
 }
 
 #======================================================================================================================
@@ -40,14 +132,15 @@ sub new {
 # §description  TODO
 #======================================================================================================================
 sub reset {
-    my $self = shift ;
+    my $self = shift;
 
-    $self->{'Store'}            = undef ;
-    $self->{'System'}           = undef ;
-    $self->{'Object'}           = undef ;
-    $self->{'LanguageInfo'}     = undef ;
-    
-    return ;
+print "epages.reset\n";
+    $self->{'Store'}            = undef;
+    $self->{'System'}           = undef;
+    $self->{'Object'}           = undef;
+    $self->{'LanguageInfo'}     = undef;
+
+    return;
 }
 
 #======================================================================================================================
@@ -61,9 +154,9 @@ sub reset {
 # §return       $isActive | TRUE is there is a Store active | boolean
 #======================================================================================================================
 sub isStoreActive {
-    my $self = shift ;
+    my $self = shift;
 
-    return defined $self->{'System'} ;
+    return defined $self->{'System'};
 }
 
 #======================================================================================================================
@@ -77,14 +170,14 @@ sub isStoreActive {
 # §input        $Store | Name of the Store to link | string
 #======================================================================================================================
 sub setStore {
-    my $self = shift ;
+    my $self = shift;
 
-    my ( $Store ) = @_ ;
-    
-    $self->reset() ;
-    $self->{'Store'}    = $Store ;
-    
-    return ;
+    my ( $Store ) = @_;
+
+    $self->reset();
+    $self->{'Store'} = $Store;
+
+    return;
 }
 
 #======================================================================================================================
@@ -98,9 +191,9 @@ sub setStore {
 # §return       $Store | The current Store | object
 #======================================================================================================================
 sub getStore {
-    my $self = shift ;
+    my $self = shift;
 
-    return $self->{'Store'} ;
+    return $self->{'Store'};
 }
 
 #======================================================================================================================
@@ -114,14 +207,14 @@ sub getStore {
 # §input        $Store | Name of the Store to link | string
 #======================================================================================================================
 sub connect {
-    my $self = shift ;
+    my $self = shift;
 
     if ( defined $self->{'Store'} ) {
-        $self->{'System'}   = LoadRootObject() ;
-        $self->loadLanguageInfo() ;
+        $self->{'System'} = LoadRootObject();
+        $self->loadLanguageInfo();
     }
 
-    return ;
+    return;
 }
 
 #======================================================================================================================
@@ -135,9 +228,9 @@ sub connect {
 # §return       $System | The current Store System object | object
 #======================================================================================================================
 sub getSystem {
-    my $self = shift ;
+    my $self = shift;
 
-    return $self->{'System'} ;
+    return $self->{'System'};
 }
 
 #======================================================================================================================
@@ -151,13 +244,13 @@ sub getSystem {
 # §input        $Object | Set the current Object | object
 #======================================================================================================================
 sub setObject {
-    my $self = shift ;
+    my $self = shift;
 
-    my ( $Object ) = @_ ;
-    
-    $self->{'Object'} = $Object ;
-    
-    return ;
+    my ( $Object ) = @_;
+
+    $self->{'Object'} = $Object;
+
+    return;
 }
 
 #======================================================================================================================
@@ -171,9 +264,9 @@ sub setObject {
 # §return       $Object | The current object | object
 #======================================================================================================================
 sub getObject {
-    my $self = shift ;
+    my $self = shift;
 
-    return $self->{'Object'} ;
+    return $self->{'Object'};
 }
 
 #======================================================================================================================
@@ -185,12 +278,12 @@ sub getObject {
 # §description  TODO
 #======================================================================================================================
 sub loadLanguageInfo {
-    my $self = shift ;
+    my $self = shift;
 
     if ( $self->isStoreActive() ) {
         $self->{'LanguageInfo'} = ePages::LanguageInfo->new( $self->getSystem() );
     } else {
-        $self->{'LanguageInfo'} = undef ;
+        $self->{'LanguageInfo'} = undef;
     }
 
     return;
@@ -205,9 +298,9 @@ sub loadLanguageInfo {
 # §description  TODO
 #======================================================================================================================
 sub getLanguageInfo {
-    my $self = shift ;
+    my $self = shift;
 
-    return $self->{'LanguageInfo'} ;
+    return $self->{'LanguageInfo'};
 }
 
 1;

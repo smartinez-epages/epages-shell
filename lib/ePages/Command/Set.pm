@@ -2,7 +2,7 @@
 # Set
 #======================================================================================================================
 package ePages::Command::Set ;
-use base Shell::Command ;
+use base Shell::Command::Command;
 
 use strict ;
 
