@@ -82,7 +82,6 @@ sub execute {
 
     my ( $CommandArgs ) = @_;
 
-print "cache.execute\n";
     my $Shell = $self->{'Shell'} ;
     $Shell->getConsole()->debug( "Execute command CACHE\n" );
     $Shell->{'ePages'}->updateCache() ;

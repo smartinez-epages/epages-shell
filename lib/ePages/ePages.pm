@@ -43,7 +43,6 @@ sub new {
 sub open {
     my $self = shift;
 
-print "epages.open\n";
     $self->reset();
 
     my $MessageCenter = 
@@ -72,10 +71,8 @@ print "epages.open\n";
 sub close {
     my $self = shift;
 
-print "epages.close\n";
     my $MessageCenter = $self->{'MessageCenter'};
     if (defined $MessageCenter) {
-print "messagecenter.close\n";
         $MessageCenter->close();
         $self->{'MessageCenter'} = undef;
     }
@@ -96,10 +93,8 @@ print "messagecenter.close\n";
 sub updateCache {
     my $self = shift;
 
-print "epages.updateCache\n";
     my $MessageCenter = $self->{'MessageCenter'};
     if (defined $MessageCenter) {
-print "messagecenter.sendIdleRequest\n";
         $MessageCenter->sendIdleRequest();
         ResetTouched();
     }
@@ -134,7 +129,6 @@ sub getMessageCenter {
 sub reset {
     my $self = shift;
 
-print "epages.reset\n";
     $self->{'Store'}            = undef;
     $self->{'System'}           = undef;
     $self->{'Object'}           = undef;
