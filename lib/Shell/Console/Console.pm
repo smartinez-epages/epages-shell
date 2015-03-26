@@ -5,20 +5,19 @@
 #======================================================================================================================
 package Shell::Console::Console;
 
-use strict ;
+use strict;
 
-use Exporter 'import' ;
+use Exporter 'import';
 
 our @EXPORT_OK = qw (
     NewConsole
-) ;
+);
 
 use Shell::Console::TerminalConsole;
 use Shell::Console::BatchConsole;
 
 use Data::Dumper;
-
-$Data::Dumper::Indent = 1 ;
+$Data::Dumper::Indent = 1;
 
 #======================================================================================================================
 # §function     NewConsole
@@ -33,33 +32,33 @@ $Data::Dumper::Indent = 1 ;
 # §return       $Console | TODO | object
 #======================================================================================================================
 sub NewConsole {
-    my ($Shell) = @_ ;
+    my ($Shell) = @_;
 
-    my $Console = undef ;
-    my $Arguments = $Shell->getArguments() ;
-    my $BatchFileName = $Arguments->{'BatchFileName'} ;
+    my $Console = undef;
+    my $Arguments = $Shell->getArguments();
+    my $BatchFileName = $Arguments->{'BatchFileName'};
 
-    if ( defined $BatchFileName ) {
-        $Console =  Shell::Console::BatchConsole->new({ 
-                        'FileName'  => $BatchFileName, 
-                        'Prompt'    => $Arguments->{'Prompt'}
-                    }) ; 
-    } else {
-        my $PagerConfigProperty = $Shell->getConfiguration()->getProperty('pager');
-        $Console =  Shell::Console::TerminalConsole->new({
-                        'Pager' => $PagerConfigProperty->getValue()
+    if (defined $BatchFileName) {
+        $Console =  Shell::Console::BatchConsole->new({
+                        'Shell'         => $Shell,
+                        'FileName'      => $BatchFileName,
+                        'ShowPrompt'    => $Arguments->{'ShowPrompt'}
                     });
-        $PagerConfigProperty->addListener($Console);
+    } else {
+        $Console =  Shell::Console::TerminalConsole->new({
+                        'Shell'     => $Shell,
+                        'Pager'     => ($Arguments->{'NoPager'})? 'off' : 'on'
+                    });
     }
 
-    return $Console ;
+    return $Console;
 }
 
 #======================================================================================================================
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       my $console = Shell::Console->new( $hOptions ) ;
+# §syntax       my $console = Shell::Console->new( $hOptions );
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Console constructor
 #----------------------------------------------------------------------------------------------------------------------
@@ -69,14 +68,65 @@ sub NewConsole {
 #======================================================================================================================
 sub new {
     my $class = shift;
-
-    my ( $hOptions ) = @_ ;
+    my ($hOptions) = @_;
 
     my $hAttributes = {
-        'Verbosity'   => 1 
-    } ;
+        'Verbosity'   => 'normal'
+    };
+
+    my $self = bless( { %$hAttributes, %$hOptions }, $class );
+
+    $self->_addConfigurationProperties();
+
+    return $self;
+}
+
+#======================================================================================================================
+# §function     addConfigurationProperties
+# §state        protected
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Console->_addConfigurationProperties()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _addConfigurationProperties() {
+    my $self = shift;
+
+    my $Configuration = $self->{'Shell'}->getConfiguration();
     
-    return bless( { %$hAttributes, %$hOptions }, $class );
+    my $VerboseConfigProperty = $Configuration->addProperty({
+                                    'Name'          => 'verbose',
+                                    'Value'         => 'normal',
+                                    'Description'   => 'Verbose level : mute, normal, debug',
+                                    'Validator'     => sub {
+                                        return shift =~ /^mute|normal|debug$/i;
+                                    },
+                                    'Filter'        => sub {
+                                        return lc(shift);
+                                    }
+                                });
+    $VerboseConfigProperty->addListener($self);
+
+    return;
+}
+
+#======================================================================================================================
+# §function     notifyConfigChange
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Console->notifyConfigChange($PeropertyName, $PropertyValue)
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub notifyConfigChange() {
+    my $self = shift;
+    my ($PropertyName, $PropertyValue) = @_;
+
+    if ($PropertyName eq 'verbose') {
+        $self->setVerbosity($PropertyValue);
+    }
+
+    return;
 }
 
 #======================================================================================================================
@@ -91,12 +141,11 @@ sub new {
 #======================================================================================================================
 sub setVerbosity {
     my $self = shift;
+    my ($Verbosity) = @_;
 
-    my ( $Verbosity ) = @_ ;
-    
-    $self->{'Verbosity'} =  $Verbosity ;
+    $self->{'Verbosity'} =  $Verbosity;
 
-    return ;
+    return;
 }
 
 #======================================================================================================================
@@ -112,7 +161,7 @@ sub setVerbosity {
 sub getVerbosity {
     my $self = shift;
 
-    return $self->{'Verbosity'} ;
+    return $self->{'Verbosity'};
 }
 
 #======================================================================================================================
@@ -128,9 +177,9 @@ sub getVerbosity {
 sub error {
     my $self = shift;
 
-    $self->output( "\nERROR : @_\n" ) ;
+    $self->output( "\nERROR : @_\n" );
 
-    return ;
+    return;
 }
 
 #======================================================================================================================
@@ -148,7 +197,7 @@ sub dump {
 
     $self->output( Dumper( @_ ) );
 
-    return ;
+    return;
 }
 
 #======================================================================================================================
@@ -164,12 +213,12 @@ sub dump {
 sub debug {
     my $self = shift;
 
-    if ( $self->{'Debug'} ) {
-        my $Format = shift ;
-        $self->output( "DEBUG: $Format", @_ ) ;
+    if ( $self->{'Verbosity'} eq 'debug' ) {
+        my $Format = shift;
+        $self->output( "DEBUG: $Format", @_ );
     }
 
-    return ;
+    return;
 }
 
 #======================================================================================================================
@@ -180,7 +229,7 @@ sub debug {
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #======================================================================================================================
-sub open { return ; }
+sub open { return; }
 
 #======================================================================================================================
 # §function     close
@@ -190,7 +239,7 @@ sub open { return ; }
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #======================================================================================================================
-sub close { return ; }
+sub close { return; }
 
 #======================================================================================================================
 # §function     reset
@@ -200,7 +249,7 @@ sub close { return ; }
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
 #======================================================================================================================
-sub reset { return ; }
+sub reset { return; }
 
 #======================================================================================================================
 # §function     prompt
@@ -214,7 +263,7 @@ sub reset { return ; }
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Input | TODO | string
 #======================================================================================================================
-sub prompt { return '' ; }
+sub prompt { return ''; }
 
 #======================================================================================================================
 # §function     info
@@ -231,11 +280,11 @@ sub prompt { return '' ; }
 sub info {
     my $self = shift;
 
-    if ( $self->{'Verbosity'} ) {
-        $self->output( @_ ) ;
-    } 
-    
-    return ;
+    if ( $self->{'Verbosity'} ne 'mute' ) {
+        $self->output( @_ );
+    }
+
+    return;
 }
 
 #======================================================================================================================
@@ -250,7 +299,6 @@ sub info {
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Continue | TODO | boolean
 #======================================================================================================================
-sub output { return 1 ; }
-
+sub output { return 1; }
 
 1;

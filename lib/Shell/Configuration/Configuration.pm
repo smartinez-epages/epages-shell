@@ -49,13 +49,14 @@ sub addProperty {
     my $self = shift;
     my ($hPropertyInfo) = @_;
 
+    my $Property = undef;
     if($hPropertyInfo) {
-        my $Property = Shell::Configuration::ConfigurationProperty->new($hPropertyInfo);
+        $Property = Shell::Configuration::ConfigurationProperty->new($hPropertyInfo);
         my $Properties = $self->getProperties();
         $Properties->{$Property->getName()} = $Property; 
     }
     
-    return;
+    return $Property;
 }
 
 #======================================================================================================================

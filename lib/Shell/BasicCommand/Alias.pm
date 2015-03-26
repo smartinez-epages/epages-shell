@@ -9,79 +9,56 @@ use strict;
 #======================================================================================================================
 # §function     getName
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandName = $Command->getName() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the name of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | the command name | string
 #======================================================================================================================
 sub getName {
     my $self = shift;
 
-    return 'alias' ;
+    return 'alias';
 }
 
 #======================================================================================================================
 # §function     getAlias
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
 #======================================================================================================================
 sub getAlias {
     my $self = shift;
 
-    return [ 'al' ] ;
+    return [ 'al' ];
 }
 
 #======================================================================================================================
 # §function     getDescription
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aDescription = $Command->getDescription() ;
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a list of text lines with the short description for the command.
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $aDescription | Description for the command | array.ref
 #======================================================================================================================
 sub getDescription {
     my $self = shift;
 
     return [
         'Show the alias for the available commands.',
-    ] ;
+    ];
 }
 
 #======================================================================================================================
 # §function     execute
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->execute( $CommandArgs ) 
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | Arguments provided for the command execution | string
 #======================================================================================================================
 sub execute {
     my $self = shift;
+    my ($CommandArgs) = @_;
 
-    my ( $CommandArgs ) = @_ ;
+    my $Shell = $self->{'Shell'};
+    my $Console = $Shell->getConsole();
 
-    my $Shell = $self->{'Shell'} ;
-    my $Console = $Shell->getConsole() ;
-    
-    $Console->debug( "Execute command ALIAS\n" ) ;
+    $Console->debug("Execute command ALIAS\n");
+    $Console->output("\nAvailable commands and their alias ( - means no alias ) :\n\n");
 
-    $Console->output( "\nAvailable commands and their alias ( - means no alias ) :\n\n" ) ;
-    my $CmdNames = $Shell->getCommandNames() ;
-    foreach my $CommandName ( @$CmdNames ) {
-        $self->_showComandAlias( $Shell->getCommand( $CommandName ) ) ;
+    my $CommandManager = $Shell->getCommandManager();
+    my $CmdNames = $CommandManager->getCommandNames();
+    foreach my $CommandName (@$CmdNames) {
+        $self->_showComandAlias( $CommandManager->getCommand($CommandName ));
     }
-    $Console->output( "\n" ) ;
+
+    $Console->output("\n");
 
     return;
 }
@@ -89,29 +66,26 @@ sub execute {
 #======================================================================================================================
 # §function     _showComandAlias
 # §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->_showComandAlias( $Command ) 
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
 #======================================================================================================================
 sub _showComandAlias {
     my $self = shift;
+    my ($Command) = @_;
 
-    my ( $Command ) = @_ ;
+    my $Console = $self->{'Shell'}->getConsole();
+    my $Aliases = $Command->getAlias();
+    if ((scalar @$Aliases) == 0) {
+        $Aliases = [ '-'];
+    }
 
-    my $Console = $self->{'Shell'}->getConsole() ;
-    
-    my $Aliases = $Command->getAlias() ;
-    if ( ( scalar @$Aliases ) == 0 ) {
-        $Aliases = [ '-'] ;
+    $Console->output("  - %-20s", $Command->getName());
+
+    my $Separator = '';
+    foreach my $Alias (@$Aliases) {
+        $Console->output("%s%s", $Separator, $Alias);
+        $Separator = ', ';
     }
-    $Console->output( "  - %-20s", $Command->getName() ) ;
-    my $Separator = '' ;
-    foreach my $Alias ( @$Aliases ) {
-        $Console->output( "%s%s", $Separator, $Alias) ;
-        $Separator = ', ' ;
-    }
-    $Console->output( "\n" ) ;
+
+    $Console->output("\n");
 
     return;
 }

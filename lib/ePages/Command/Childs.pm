@@ -43,16 +43,16 @@ sub getAlias {
 }
 
 #======================================================================================================================
-# §function     getArguments
+# §function     getParameters
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aArguments = $Command->getArguments() ;
+# §syntax       $hParameters = $Command->getParameters() ;
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Returns a hash with the arguments to use with the command. The hash will be use with the Getopt lib.
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $hArgumens | Arguments specification for the command | hash.ref
 #======================================================================================================================
-sub getArguments {
+sub getParameters {
     my $self = shift;
 
     return {

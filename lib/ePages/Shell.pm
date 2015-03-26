@@ -19,12 +19,6 @@ use ePages::ePages;
 #======================================================================================================================
 # §function     new
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       Shell->new();
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Constructor
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Object | The new object instance | Object
 #======================================================================================================================
 sub new {
     my $class = shift;
@@ -36,6 +30,23 @@ sub new {
         'Title'             => 'SHE: Shell ePages (Beta 3)',
         'ResetStore'        => 0,
         'ePages'            => ePages::ePages->new(), 
+        'Configuration'     => [
+                                    {
+                                        'Name'          => 'prompt',
+                                        'Value'         => '[she] ',
+                                        'Description'   => 'ePages shell prompt'
+                                    },
+                                    {
+                                        'Name'          => 'fmtdatetime',
+                                        'Value'         => '%d/%m/%Y %H:%M:%S',
+                                        'Description'   => 'epages datetime objects format'
+                                    },
+                                    {
+                                        'Name'          => 'fmtdate',
+                                        'Value'         => '%d/%m/%Y',
+                                        'Description'   => 'epages date objects format'
+                                    },
+                               ],
         'Commands'          => [
                                     'ePages::Command::Store',
                                     'ePages::Command::Path',
@@ -46,18 +57,10 @@ sub new {
                                     'ePages::Command::Set',
                                     'ePages::Command::Delete',
                                ],
-        'Configuration'     => [
-                                    {
-                                        'Name'          => 'prompt',
-                                        'Value'         => '[she] ',
-                                        'Description'   => 'ePages shell prompt'
-                                    },
-                                    {
-                                        'Name'          => 'datefmt',
-                                        'Value'         => 'dd/mm/YYYY HH:MM:SS',
-                                        'Description'   => 'DateTime objects format'
-                                    },
-                               ]
+        'Parameters'        => {
+            'Store' => [ 'storename=s', undef ],
+            'Path'  => [ 'path=s',      undef ],
+        },
     };
 
     return $class->SUPER::new({ %$hAttributes, %$hOptions });
@@ -66,10 +69,6 @@ sub new {
 #======================================================================================================================
 # §function     getHeaderText
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       pending
-#----------------------------------------------------------------------------------------------------------------------
-# §description  pending
 #======================================================================================================================
 sub getHeaderText {
     my $self = shift;
@@ -78,7 +77,7 @@ sub getHeaderText {
 
 Wellcome to the ePages shell, a simple command-line tool to ease the interaction with the epages objects.
 
-This is an experimental tool (Alpha version) which intends to include in one shell all the operations you need
+This is an experimental tool (Beta version) which intends to include in one shell all the operations you need
 to work with epages at low level: manage objects (create, read, update, delete) and more... Yes, epages includes
 a lot os scripts to do almost everything, but it would be nice to have those utilities in one tool, isn't ? 
 
@@ -113,11 +112,7 @@ HELP_TEXT
 
 #======================================================================================================================
 # §function     _run
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->_run()
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
+# §state        protected
 #======================================================================================================================
 sub _run {
     my $self = shift;
@@ -133,7 +128,7 @@ sub _run {
     do {
         $self->{'ResetStore'} = 0;
         if ( defined $self->{'ePages'}->getStore() ) {
-            $self->runOnStore();
+            $self->_runOnStore();
         } else {
             $self->SUPER::_run();
         }
@@ -145,19 +140,10 @@ sub _run {
 }
 
 #======================================================================================================================
-# §function     runOnStore
+# §function     _runOnStore
 # §state        private
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       pending
-# §example      pending
-#----------------------------------------------------------------------------------------------------------------------
-# §description  pending
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $Name | Description | type
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | Description | type
 #======================================================================================================================
-sub runOnStore {
+sub _runOnStore {
     my $self = shift;
 
     my $Console = $self->getConsole();
@@ -188,12 +174,6 @@ sub runOnStore {
 #======================================================================================================================
 # §function     error
 # §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->error( $@ )
-#----------------------------------------------------------------------------------------------------------------------
-# §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $ShowByeText | TODO | boolean
 #======================================================================================================================
 sub error {
     my $self = shift;

@@ -10,10 +10,6 @@ use strict ;
 
 use Term::ReadKey;
 
-use Data::Dumper;
-
-$Data::Dumper::Indent = 1 ;
-
 #======================================================================================================================
 # §function     new
 # §state        public
@@ -31,18 +27,53 @@ sub new {
 
     my ( $hOptions ) = @_ ;
 
-#    system( 'stty erase ^?' ) ;
-
     my $hAttributes = {
         'Pager'         => 'on',
         'PagerCmd'      => 0,
         'PagerMax'      => 0,
         'PagerCount'    => 0
     } ;
-    
+
     return $class->SUPER::new( { %$hAttributes, %$hOptions }, $class );
 }
 
+#======================================================================================================================
+# §function     _addConfigurationProperties
+# §state        protected
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Console->_addConfigurationProperties()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _addConfigurationProperties() {
+    my $self = shift;
+
+    $self->SUPER::_addConfigurationProperties();
+
+    my $Configuration = $self->{'Shell'}->getConfiguration();
+    
+    my $PagerConfigProperty =   $Configuration->addProperty({
+                                    'Name'          => 'pager',
+                                    'Value'         => $self->{'Pager'},
+                                    'Description'   => 'Pager enable (on) / disable (off)',
+                                    'Validator'     => sub {
+                                        return shift =~ /^on|off$/i;
+                                    },
+                                    'Filter'        => sub {
+                                        return lc(shift);
+                                    }
+                                });
+    $PagerConfigProperty->addListener($self);
+    
+    my $BackspaceConfigProperty =   $Configuration->addProperty({
+                                    'Name'          => 'bksp',
+                                    'Value'         => '[default]',
+                                    'Description'   => 'Changes the backspace control sequence (stty erase X)',
+                                });
+    $BackspaceConfigProperty->addListener($self);
+
+    return;
+}
 
 #======================================================================================================================
 # §function     notifyConfigChange
@@ -55,9 +86,13 @@ sub new {
 sub notifyConfigChange() {
     my $self = shift;
     my ($PropertyName, $PropertyValue) = @_;
-    
+
     if ($PropertyName eq 'pager') {
         $self->{'Pager'} = $PropertyValue;
+    } elsif ($PropertyName eq 'bksp') {
+        system( 'stty erase '.$PropertyValue ) ;
+    } else {
+        $self->SUPER::notifyConfigChange($PropertyName, $PropertyValue);
     }
 
     return;

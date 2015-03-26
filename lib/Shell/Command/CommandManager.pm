@@ -1,172 +1,216 @@
 #======================================================================================================================
-#   Command
-#
-#   Abstract class for any command we want to run in the Shell
-#
+# CommandManager
 #======================================================================================================================
-package Shell::Command::Command;
+package Shell::Command::CommandManager;
 
 use strict;
 
-use Shell::Command::Parameters;
+use Module::Load;
 
 #======================================================================================================================
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       Command->new( $Shell, $Options )
+# §syntax       my $CommandManager = CommandManager->new($Shell);
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Constructor
+# §description  TODO
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $Shell | The shell which creates and executes this command | object
-# §input        $Options | Optionally a command could be build with some specific arguments | unknown
+# §input        $Name | Description | type
 #----------------------------------------------------------------------------------------------------------------------
-# §return       $Object | The new object instance | Object
+# §return       $Name | Description | type
 #======================================================================================================================
 sub new {
-    my $Class = shift;
-    my ($Shell, $Options) = @_;
+    my $class = shift;
+    my ($Shell) = @_;
 
     my $hAttributes = {
-        'Shell'         => $Shell,
-        'Options'       => $Options,
-        'Parameters'    => undef,
+        'Shell'             => $Shell,  # Reference to Shell object parent
+        'CommandsList'      => [],      # Array with all the available Command objects
+        'CommandsHash'      => {},      # Hash table to lookup Commands by Name and Alias
+        'CommandsNames'     => [],      # Array with the names of all available commands
     };
 
-    my $self = bless($hAttributes, $Class);
-
-    $self->{'Parameters'} = Shell::Command::Parameters->new($self->getParameters());
-
-    return $self;
-
+    return bless($hAttributes, $class);
 }
 
 #======================================================================================================================
-# §function     getName
+# §function     getAllCommands
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandName = $Command->getName();
+# §syntax       my $aCommands = $CommandManager->getAllCommands();
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the name of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Name | the command name | string
+# §description  TODO
 #======================================================================================================================
-sub getName {
+sub getAllCommands {
     my $self = shift;
 
-    return 'cmd';
+    return $self->{'CommandsList'};
 }
 
 #======================================================================================================================
-# §function     getAlias
+# §function     getCommandNames
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $CommandAlias = $Command->getAlias();
+# §syntax       my $aCommandNames = $CommandManager->getCommandNames();
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns an array with all the alias for this command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $AliasList | All the alias for this command | array.ref
+# §description  TODO
 #======================================================================================================================
-sub getAlias {
+sub getCommandNames {
     my $self = shift;
 
-    return [];
+    return $self->{'CommandsNames'};
 }
 
 #======================================================================================================================
-# §function     getParameters
+# §function     existsCommand
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $hParameters = $Command->getParameters();
+# §syntax       my $ExistsCommand = $CommandManager->existsCommand($CommandName);
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a hash with the parameters declaration for the command.
-#               The hash will be use with the Getopt lib.
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $hParameters | Parameters declaration for the command | hash.ref
+# §description  TODO
 #======================================================================================================================
-sub getParameters {
+sub existsCommand {
     my $self = shift;
+    my ($CommandName) = @_;
 
-    return {};
+    return defined $self->{'CommandsHash'}->{$CommandName};
 }
 
 #======================================================================================================================
-# §function     getDescription
+# §function     getCommand
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $aDescription = $Command->getDescription();
+# §syntax       my $Command = $CommandManager->getCommand($CommandName);
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns a list of text lines with the short description for the command.
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $aDescription | Description for the command | array.ref
+# §description  TODO
 #======================================================================================================================
-sub getDescription {
+sub getCommand {
     my $self = shift;
+    my ($CommandName) = @_;
 
-    return [ 'This is the abstract command class' ];
+    return $self->{'CommandsHash'}->{$CommandName};
 }
 
 #======================================================================================================================
-# §function     getHelp
+# §function     loadCommands
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Help = $Command->getHelp()
+# §syntax       my $Command = $CommandManager->loadCommands($aCommandModuleList);
 #----------------------------------------------------------------------------------------------------------------------
-# §description  Returns the detailed help of the command
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $Help | The detailed command help | string
+# §description  TODO
 #======================================================================================================================
-sub getHelp {
+sub loadCommands {
     my $self = shift;
-
-    my $Help = "Description:\n";
-    my $Description = $self->getDescription();
-    foreach my $HelpLine (@$Description) {
-        $Help .= "     $HelpLine\n";
-    }
-
-    return $Help;
-}
-
-#======================================================================================================================
-# §function     execute
-# §state        public
-#----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Command->execute($CommandArgs)
-#----------------------------------------------------------------------------------------------------------------------
-# §description  Executes the command with the specified arguments
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | Arguments provided for the command execution | string
-#======================================================================================================================
-sub execute {
-    my $self = shift;
-    my ($CommandArgs) = @_;
-
-    my $Console = $self->{'Shell'}->getConsole();
-
-    $Console->debug("Execute command (Abstract Class!)\n");
-    $Console->output("Nothing to do !\n");
+    my ($aCommandModuleList) = @_;
+    
+    $self->_loadCommands($aCommandModuleList);
+    $self->_initCommandsHash();
+    $self->_initNamesArray();
 
     return;
 }
 
 #======================================================================================================================
-# §function     _parseArguments
+# §function     _loadCommands
 # §state        private
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       $Shell->_parseArguments($CommandArgs)
+# §syntax       $CommandManager->_loadCommands($aCommandModuleList);
 #----------------------------------------------------------------------------------------------------------------------
 # §description  TODO
-#----------------------------------------------------------------------------------------------------------------------
-# §input        $CommandArgs | TODO | string
-#----------------------------------------------------------------------------------------------------------------------
-# §return       $hArguments | TODO | hash.ref
 #======================================================================================================================
-sub _parseArguments {
+sub _loadCommands {
     my $self = shift;
-    my ($CommandArgs) = @_;
+    my ($aCommandModuleList) = @_;
 
-    return $self->{'Parameters'}->parseFromString($CommandArgs);
+    my $aCommandsList = $self->{'CommandsList'};
+    foreach my $CommandModulePath (@$aCommandModuleList) {
+        my $Command = $self->_loadCommandModule($CommandModulePath);
+        if (defined $Command) {
+            push(@$aCommandsList, $Command);
+        }
+    }
+
+    return;
+}
+
+#======================================================================================================================
+# §function     _loadCommandModule
+# §state        private
+#======================================================================================================================
+sub _loadCommandModule {
+    my $self = shift;
+    my ($CommandModulePath) = @_;
+
+    my $Shell = $self->{'Shell'};
+    my $Console = $Shell->getConsole();
+    my $CommandInstance = undef;
+    eval {
+        $Console->debug("Loading command module '%s'\n", $CommandModulePath);
+        load $CommandModulePath;
+        $Console->debug("Creating command '%s'\n", $CommandModulePath);
+        $CommandInstance = $CommandModulePath->new($Shell);
+    };
+    if ($@) {
+        $Console->output("ERROR: %s\n\n", $@);
+    }
+    if (not defined $CommandInstance) {
+        $Console->output("Module '%s' not found !!!\n", $CommandModulePath);
+    }
+
+    return $CommandInstance;
+}
+
+#======================================================================================================================
+# §function     _initCommandsHash
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $CommandManager->_initCommandsHash()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _initCommandsHash {
+    my $self = shift;
+
+    my $aCommandsList = $self->{'CommandsList'};
+    my $hCommandsHash = $self->{'CommandsHash'};
+    foreach my $Command (@$aCommandsList) {
+        my $CommandName = lc($Command->getName());
+        my $aCommandAlias = $Command->getAlias();
+        $hCommandsHash->{$CommandName} = $Command;
+        if (defined $aCommandAlias) {
+            foreach my $Alias (@$aCommandAlias) {
+                $hCommandsHash->{lc($Alias)} = $Command;
+            }
+        }
+    }
+
+    return;
+}
+
+#======================================================================================================================
+# §function     _initNamesArray
+# §state        private
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $CommandManager->_initNamesArray()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#======================================================================================================================
+sub _initNamesArray {
+    my $self = shift;
+
+    my $aCommandsList = $self->{'CommandsList'};
+    my @aUnsortedCommandsNames = ();
+    foreach my $Command (@$aCommandsList) {
+        my $CommandName = lc($Command->getName());
+        push(@aUnsortedCommandsNames, $CommandName);
+    }
+
+    my $aCommandsNames = $self->{'CommandsNames'};
+    foreach my $CommandName (sort @aUnsortedCommandsNames) {
+        push(@$aCommandsNames, $CommandName);
+    }
+
+    return;
 }
 
 1;

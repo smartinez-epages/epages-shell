@@ -75,7 +75,7 @@ sub prompt {
         if ( not defined $InputLine ) {
             return 'exit' ;
         }
-        if ( $self->{'Prompt'} ) {
+        if ( $self->{'ShowPrompt'} ) {
             my $Format = shift ;
             printf( $Format, @_ ) ;
             printf( $InputLine ) ;

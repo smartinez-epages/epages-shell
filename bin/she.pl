@@ -17,7 +17,6 @@ sub Main {
 
     my $shell = ePages::Shell->new({ 'Arguments' => \@ARGV });
 
-    $shell->printHeader();
     $shell->run();
 
     return;

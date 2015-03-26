@@ -1,9 +1,9 @@
 #======================================================================================================================
-# Arguments
+# Parameters
 #
 #   TODO
 #======================================================================================================================
-package Shell::Command::Arguments;
+package Shell::Command::Parameters;
 
 use strict;
 
@@ -16,29 +16,86 @@ use Getopt::Long qw (
 # §function     new
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
-# §syntax       Command->new( $Shell, $Options )
+# §syntax       Parameters->new($hAttributes)
 #----------------------------------------------------------------------------------------------------------------------
 # §description  Constructor
 #----------------------------------------------------------------------------------------------------------------------
-# §input        $hArgumentsMetaData |TODO | object
+# §input        $hAttributes |TODO | hash.ref
 #----------------------------------------------------------------------------------------------------------------------
 # §return       $Object | The new object instance | Object
 #======================================================================================================================
 sub new {
     my $Class = shift;
 
-    my ( $hArgumentsMetaData ) = @_ ;
+    my ($hParameters) = @_ ;
     
     my $hAttributes = {
-        'ArgumentsMetaData' => $hArgumentsMetaData ,
-        'Arguments' => {}
+        'Parameters'    => $hParameters,
+        'Arguments'     => {}
     } ;
     
     return bless( $hAttributes, $Class );
 }
 
 #======================================================================================================================
-# §function     Arguments
+# §function     getParameters
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Parameters->getParameters()
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Arguments | TODO | hash.ref
+#======================================================================================================================
+sub getParameters {
+    my $self = shift;
+
+    return $self->{'Parameters'} ;
+}
+
+#======================================================================================================================
+# §function     addParameters
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Parameters->addParameters($ParameterName, $ParameterInfo)
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Arguments | TODO | hash.ref
+#======================================================================================================================
+sub addParameters {
+    my $self = shift;
+    my ($hParameters) = @_;
+
+    foreach my $ParameterName (keys(%$hParameters)) {
+        $self->addParameter($ParameterName, $hParameters->{$ParameterName});
+    }
+
+    return;
+}
+
+#======================================================================================================================
+# §function     addParameter
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Parameters->addParameters($ParameterName, $ParameterInfo)
+#----------------------------------------------------------------------------------------------------------------------
+# §description  TODO
+#----------------------------------------------------------------------------------------------------------------------
+# §return       $Arguments | TODO | hash.ref
+#======================================================================================================================
+sub addParameter {
+    my $self = shift;
+    my ($ParameterName, $ParameterInfo) = @_;
+    
+    my $hParameters = $self->{'Parameters'};
+    $hParameters->{$ParameterName} = $ParameterInfo;
+    
+    return;
+}
+
+#======================================================================================================================
+# §function     getArguments
 # §state        public
 #----------------------------------------------------------------------------------------------------------------------
 # §syntax       $Arguments->getArguments()
@@ -128,7 +185,7 @@ sub _prepareGetOptionsData {
 
     my $hArguments = { '@' => [] }  ;
     my $GetOptsList = [] ;
-    my $ArgumentsMetaData = $self->{'ArgumentsMetaData'} ;
+    my $ArgumentsMetaData = $self->{'Parameters'} ;
 
     foreach my $ArgumentName ( keys %$ArgumentsMetaData ) {
         my $ArgumentItem = $ArgumentsMetaData->{$ArgumentName} ;
