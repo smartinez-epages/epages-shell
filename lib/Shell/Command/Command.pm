@@ -8,7 +8,7 @@ package Shell::Command::Command;
 
 use strict;
 
-use Shell::Command::Parameters;
+use Shell::Command::CommandParameters;
 
 #======================================================================================================================
 # §function     new
@@ -35,7 +35,7 @@ sub new {
 
     my $self = bless($hAttributes, $Class);
 
-    $self->{'Parameters'} = Shell::Command::Parameters->new($self->getParameters());
+    $self->{'Parameters'} = Shell::Command::CommandParameters->new($self->getParameters());
 
     return $self;
 

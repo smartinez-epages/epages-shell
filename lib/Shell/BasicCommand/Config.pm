@@ -63,6 +63,49 @@ HELP_TEXT
 }
 
 #======================================================================================================================
+# §function     getCommandMetadata
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Command->getCommandMetadata()
+#======================================================================================================================
+sub getCommandMetadata {
+    my ($self) = shift;
+        
+    return {
+        'Name'      => $self->getName(),
+        'Usage'     => [
+                            '{{NAME}} -i',
+                            '{{NAME}} [ PropertyName [ NewPropertyValue ] ]',
+                       ],
+        'Flags'     => [
+                            {
+                                'Name'      => 'info',
+                                'Key'       => 'i',
+                                'Text'      => 'Execute batch file and exit'
+                            },
+                       ],
+        'Arguments' => [
+                            {
+                                'Name'      => 'PropertyName',
+                                'Type'      => 'string',
+                                'Text'      => 'Name of an existing configuration property'
+                            },
+                            {
+                                'Name'      => 'NewPropertyValue',
+                                'Type'      => 'string',
+                                'Text'      => 'New value for the property'
+                            },
+                       ],
+        'Examples'  => [
+                            '{{NAME}} ',
+                            '{{NAME}} -i ',
+                            '{{NAME}} verbose',
+                            '{{NAME}} prompt \'# \'',
+                       ],
+    };
+}
+
+#======================================================================================================================
 # §function     getParameters
 # §state        public
 #======================================================================================================================

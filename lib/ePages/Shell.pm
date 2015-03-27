@@ -27,7 +27,7 @@ sub new {
 
     my $hAttributes  = {
         'Name'              => 'she',
-        'Title'             => 'SHE: Shell ePages (Beta 3)',
+        'Title'             => 'SHE: Shell ePages (Beta 4)',
         'ResetStore'        => 0,
         'ePages'            => ePages::ePages->new(), 
         'Configuration'     => [

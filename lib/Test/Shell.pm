@@ -22,16 +22,8 @@ sub new {
     my $hOptions = $_[0] // {};
 
     my $hAttributes  = {
-        'Title'             => 'Testing shell',
         'Commands'          => [
                                     'Test::Command::Test',
-                               ],
-        'Configuration'     => [
-                                    {
-                                        'Name'          => 'prompt',
-                                        'Value'         => '[t] ',
-                                        'Description'   => 'Test shell prompt'
-                                    },
                                ]
     };
 

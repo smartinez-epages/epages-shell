@@ -9,9 +9,11 @@ use strict;
 
 use Shell::Configuration::Configuration;
 use Shell::Command::CommandManager;
-use Shell::Command::Parameters; 
+use Shell::Command::CommandMetadata; 
 use Shell::Console::ConsoleManager;
 use Shell::Console::TerminalConsole;
+
+my $Version = '0.1';
 
 my $aDefaulConfiguration = [
     {
@@ -39,52 +41,6 @@ my $hDefaultParameters = {
     'BatchFileName'     => [ 'batch=s',     undef ],
 };
 
-my $aDefaultParameters_X = [
-    {
-        'Name'  =>  'NoPager',
-        'Key'   =>  'nopager',
-        'Type'  =>  'Flag',
-        'Help'  =>  'Disable pager'
-    },
-    {
-        'Name'  =>  'ShopPrompt',
-        'Key'   =>  'prompt',
-        'Type'  =>  'Flag',
-        'Help'  =>  'Enable print prompt in Batch mode'
-    },
-    {
-        'Name'  =>  'NoHeader',
-        'Key'   =>  'noheader',
-        'Type'  =>  'Flag',
-        'Help'  =>  'Don\'t print the starting help header'
-    },
-    {
-        'Name'  =>  'Help',
-        'Key'   =>  'help',
-        'Type'  =>  'Flag',
-        'Help'  =>  'Show this help'
-    },
-    {
-        'Name'  =>  'BatchFileName',
-        'Key'   =>  'batch',
-        'Type'  =>  'Option',
-        'Class' =>  'String',
-        'Help'  =>  'Batch mode: execute specified text file (optional)'
-    },
-    {
-        'Name'  =>  'Store',
-        'Key'   =>  'store',
-        'Type'  =>  'Arg',
-        'Help'  =>  'Store to connect on start up'
-    },
-    {
-        'Name'  =>  'ObjectPath',
-        'Key'   =>  'objectpath',
-        'Type'  =>  'Arg',
-        'Help'  =>  'Path to object to connect'
-    }
-];
- 
 #======================================================================================================================
 # §function     new
 # §state        public
@@ -105,28 +61,21 @@ sub new {
     my $hAttributes = {
         'Exit'                  => 0,
         'Name'                  => 'she',
-        'Title'                 => 'Simple shell v1',
+        'Title'                 => "Simple shell v$Version",
         'HelpTxt'               => 'Type \'help\' or \'?\' for help\n',
         'PrintHeader'           => 1,
         'Configuration'         => Shell::Configuration::Configuration->new($aDefaulConfiguration),
+        'Metadata'              => undef,
         'ConsoleManager'        => undef,
         'Console'               => undef,
         'CommandManager'        => undef,
         'Commands'              => $aDefaultCommandList,
-        'Parameters'            => Shell::Command::Parameters->new($hDefaultParameters),
-        'Arguments'             => undef,
     };
 
     # Append child configuration properties
     if (defined $hOptions->{'Configuration'}) {
         $hAttributes->{'Configuration'}->addProperties($hOptions->{'Configuration'});
         delete($hOptions->{'Configuration'});
-    }
-
-    # Append child parameters
-    if (defined $hOptions->{'Parameters'}) {
-        $hAttributes->{'Parameters'}->addParameters($hOptions->{'Parameters'});
-        delete($hOptions->{'Parameters'});
     }
 
     # Mix all the commands lists (Base and Child object) in one
@@ -138,10 +87,86 @@ sub new {
 
     my $self = bless({ %$hAttributes, %$hOptions }, $class);
     
+    $self->{'Metadata'} = Shell::Command::CommandMetadata->new($self);
     $self->{'ConsoleManager'} = Shell::Console::ConsoleManager->new($self);
     $self->{'CommandManager'} = Shell::Command::CommandManager->new($self);
     
     return $self;
+}
+
+#======================================================================================================================
+# §function     getMetadata
+# §state        public
+#----------------------------------------------------------------------------------------------------------------------
+# §syntax       $Shell->getMetadata()
+#======================================================================================================================
+sub getMetadata {
+    my ($self) = shift;
+        
+    return {
+        'Name'      => $self->{'Name'},
+        'Header'    => $self->{'Title'},
+        'Usage'     => '{{NAME}} [ flags ] [ options ] [ StoreName [ ObjectPath ] ]',
+        'Flags'     => [
+                            {
+                                'Name'      => 'ShowHelp',
+                                'Key'       => 'help',
+                                'Default'   => 0,
+                                'Text'      => 'Show this help'
+                            },
+                            {
+                                'Name'      => 'NoHeader',
+                                'Key'       => 'noheader',
+                                'Default'   => 0,
+                                'Text'      => 'Don\'t print the starter heaader'
+                            },
+#                            {
+#                                'Name'      => 'NoPager',
+#                                'Key'       => 'nopager',
+#                                'Default'   => 0,
+#                                'Text'      => 'Disable pager'
+#                            },
+#                            {
+#                                'Name'      => 'BatchPrompt',
+#                                'Key'       => 'prompt',
+#                                'Default'   => 0,
+#                                'Text'      => 'Enable print prompt in Batch mode'
+#                            },
+                       ],
+        'Options'   => [
+                            {
+                                'Name'      => 'BatchFile',
+                                'Key'       => 'batch',
+                                'Type'      => 'string',
+                                'Default'   => undef,
+                                'Text'      => 'Execute batch file and exit'
+                            },
+                       ],
+        'Arguments' => [
+                            {
+                                'Name'      => 'StoreName',
+                                'Type'      => 'string',
+                                'Optional'  => 1,
+                                'Text'      => 'Connect to the StoreName'
+                            },
+                            {
+                                'Name'      => 'ObjectPath',
+                                'Type'      => 'string',
+                                'Optional'  => 1,
+                                'Text'      => 'And select the object by path'
+                            },
+                       ],
+        'Examples'  => [
+                            '{{NAME}} ',
+                            '{{NAME}} Store /Shops/DemoShop',
+                            '{{NAME}} -nopager -noheader Site',
+                            '{{NAME}} -prompt -batch script.txt'
+                       ],
+        'xExtra'     => [ 
+                            'Extra info for {{NAME}}',
+                            'JURL'
+                        ]
+    };
 }
 
 #======================================================================================================================
@@ -261,6 +286,7 @@ sub _begin {
 sub _parseArguments {
     my $self = shift;
 
+$self->help();
     my $Arguments = $self->getParameters();
     $Arguments->parseFromArray($self->{'Arguments'});
     if ($Arguments->getArguments()->{'Help'}) {
@@ -429,58 +455,10 @@ sub error {
 # §description  TODO
 #======================================================================================================================
 sub help {
-    my $self = shift;
+    my ($self) = shift;
 
-    my $helpInfo = {
-        'Header'    => 'Command header',
-        'Usage'     => 'Command usage',
-        'Flags'     => [
-                            {
-                                'Name'  => 'flag_1',
-                                'Text'  => 'Flag 1 description'
-                            },
-                            {
-                                'Name'  => 'flag_1',
-                                'Text'  => 'Flag 1 description'
-                            },
-                       ],
-        'Options'   => [],
-        'Arguments' => [],
-        'Examples'  => [],
-        'Extra'     => 'Extra info'
-    };
-    my $Title = $self->{'Title'};
-    my $Name = $self->{'Name'};
-        
-    print <<END_USAGE;
-
-$Title
-
-Usage:
-    $Name [ flags ]  [ options ] [ StoreName [ ObjectPath ] ]
-
-Flags (optional):
-    -help           Shows this help
-    -noheader       Don't print the starting help header
-    -nopager        Disable pager
-    -prompt         Enable print prompt in Batch mode 
-    
-Options:
-    -batch          Batch mode: execute specified text file (optional)
-
-Arguments:
-    Storename       Connect to the StoreName (optional)
-    ObjectPath      And select the object by path (optional)
-
-Examples:
-    $Name 
-    $Name Store /Shops/DemoShop
-    $Name -nopager -noheader Site
-    $Name -prompt -batch script.txt
-
-END_USAGE
-
-    exit 2;
+    print $self->{'Metadata'}->getHelper()->getHelp();
+    exit(2);
 }
 
 1;

@@ -9,8 +9,6 @@ use strict;
 
 use Test::Shell;
 
-my $shell = Test::Shell->new({ 'Arguments' => \@ARGV });
-
-$shell->run() ;
+Test::Shell->new({ 'Arguments' => \@ARGV })->run();
 
 1;
